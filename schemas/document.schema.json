@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HaUIAdmissionCorpusDocument",
+  "description": "Schema standard for HaUI admission RAG corpus documents",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "content",
+    "source_url",
+    "source_name",
+    "source_type",
+    "category",
+    "crawled_date",
+    "language",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(0[1-9]|1[0-4])_[a-z0-9_]+_\\d{3,}$",
+      "description": "Unique identifier formatted as {category}_{number}, e.g., 01_admission_001"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Document title, must not be empty"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 50,
+      "description": "Cleaned semantic content for RAG, without raw HTML or junk"
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Actual official source URL"
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of source institution, e.g. HaUI or Bộ Giáo dục và Đào tạo"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "official_website",
+        "official_document",
+        "official_portal",
+        "government_document",
+        "government_portal"
+      ],
+      "description": "Official source type enum"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "01_admission",
+        "02_ministry_regulations",
+        "03_cutoff_scores",
+        "04_curriculum",
+        "05_tuition_scholarship",
+        "06_career",
+        "07_career_orientation",
+        "08_enrollment_procedure",
+        "09_training_regulations",
+        "10_dormitory_housing",
+        "11_student_life",
+        "12_student_support",
+        "13_training_systems",
+        "14_about_haui"
+      ],
+      "description": "Standardized category enum"
+    },
+    "crawled_date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Date when document was crawled (YYYY-MM-DD)"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["vi"],
+      "description": "Document language, must be 'vi'"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "archived"],
+      "description": "Document lifecycle status"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Optional subcategory"
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1990,
+      "maximum": 2030,
+      "description": "Academic or admission year"
+    },
+    "published_date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Publication date (YYYY-MM-DD)"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Effective date of legal regulations (YYYY-MM-DD)"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Expiry date if applicable (YYYY-MM-DD)"
+    },
+    "university": {
+      "type": "string",
+      "description": "University name, e.g. HaUI"
+    },
+    "authority": {
+      "type": "string",
+      "description": "Issuing authority, e.g. HaUI or Bộ Giáo dục và Đào tạo"
+    },
+    "document_number": {
+      "type": "string",
+      "description": "Official legal/administrative document number"
+    },
+    "document_type": {
+      "type": "string",
+      "description": "Type of document, e.g. Thông tư, Quyết định, Đề án, Quy chế, Thông báo"
+    }
+  },
+  "additionalProperties": false
+}

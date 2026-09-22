@@ -1,0 +1,15 @@
+[project]
+name = "haui-admission-rag-corpus"
+version = "0.1.0"
+description = "Crawler and cleaner for HaUI admission RAG source corpus."
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "jsonschema>=4.26.0",
+    "lxml>=5.3.0",
+    "pdfplumber>=0.11.4",
+    "requests>=2.32.3",
+]
+
+[tool.uv]
+package = false
