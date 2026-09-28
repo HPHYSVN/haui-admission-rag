@@ -208,6 +208,55 @@ def review_chunks(
     return len(chunks)
 
 
+def revise_final_chunk(
+    proposal_file: Path,
+    reviewed_file: Path,
+    final_file: Path,
+    *,
+    document_id: str,
+    chunk_id: str,
+    text: str,
+) -> int:
+    replacement = text.strip()
+    if not replacement:
+        raise ValueError("Editing a chunk requires non-empty replacement text")
+
+    chunks = _merge_proposals_with_reviews(proposal_file, reviewed_file)
+    reviewed = next(
+        (
+            chunk
+            for chunk in chunks
+            if chunk.get("chunk_id") == chunk_id
+            and chunk.get("document_id") == document_id
+        ),
+        None,
+    )
+    if reviewed is None or reviewed.get("status") not in {"approved", "edited"}:
+        raise ValueError(f"Chunk {chunk_id!r} is not an approved chunk for {document_id!r}")
+
+    final_chunks = _read_jsonl(final_file) if final_file.exists() else []
+    final = next(
+        (
+            chunk
+            for chunk in final_chunks
+            if chunk.get("chunk_id") == chunk_id
+            and chunk.get("document_id") == document_id
+            and chunk.get("status") == "final"
+        ),
+        None,
+    )
+    if final is None:
+        raise ValueError(f"Final chunk {chunk_id!r} was not found in {final_file}")
+
+    reviewed["status"] = "edited"
+    reviewed["text_override"] = replacement
+    final["text"] = replacement
+    final["text_override"] = replacement
+    _write_jsonl(reviewed_file, chunks)
+    _write_jsonl(final_file, final_chunks)
+    return sum(chunk.get("document_id") == document_id for chunk in final_chunks)
+
+
 def finalize_chunks(
     proposal_file: Path,
     reviewed_file: Path,

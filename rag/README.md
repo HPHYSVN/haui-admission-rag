@@ -69,10 +69,20 @@ Markdown edits to source JSONL. Set `VISUAL` or `EDITOR` to override the
 default opener.
 
 The chunk menu distinguishes pending proposals from approved/final chunks.
-Approved chunks may still be edited; the CLI re-finalizes that document after
-the edit, and retrieval refreshes its local embedding index automatically.
-If a document has unresolved chunk proposals, the edit is saved as a review
-decision but final chunks remain unchanged until those proposals are resolved.
+Approving, editing, rejecting, splitting, or merging a proposal saves a review
+decision to `data/chunks/reviewed/<category>.jsonl`; the generated proposal
+file remains unchanged. Once every proposal for a document has a decision
+(including any split/merge replacements), the CLI automatically writes the
+approved/edited chunks to `data/chunks/final/<category>.jsonl`. Rejected and
+superseded chunks are excluded. The menu also offers **Finalize fully reviewed
+documents** for work completed before automatic finalization was available.
+
+Final chunks remain editable from **Edit final chunks**. That action updates
+both the reviewed decision and the matching final record directly, so unrelated
+pending proposals cannot prevent an already-finalized chunk from being
+amended. The embedding index refreshes the changed text on the next retrieval.
+For multiline edits and splits, finish with `:save` on its own line or discard
+with `:cancel`; a period is ordinary chunk content.
 
 Render just the document being reviewed:
 
