@@ -16,6 +16,7 @@ from typing import Any, Callable
 from rag.chunk_review import (
     finalize_chunks,
     load_review_chunks,
+    revise_final_chunk,
     review_chunks,
 )
 from rag.config import ROOT_DIR
@@ -119,10 +120,19 @@ def amendable_chunks(paths: ReviewPaths) -> list[tuple[Path, dict[str, Any]]]:
     amendable: list[tuple[Path, dict[str, Any]]] = []
     for proposal_file in sorted(paths.proposals_dir.glob("*.jsonl")):
         reviewed_file = paths.reviewed_dir / proposal_file.name
+        final_file = paths.final_dir / proposal_file.name
+        if not final_file.exists():
+            continue
+        final_ids = {
+            chunk["chunk_id"]
+            for chunk in _read_chunks(final_file)
+            if chunk.get("status") == "final"
+        }
         amendable.extend(
             (proposal_file, chunk)
             for chunk in load_review_chunks(proposal_file, reviewed_file)
             if chunk.get("status") in {"approved", "edited"}
+            and chunk.get("chunk_id") in final_ids
         )
     return sorted(
         amendable,
@@ -131,6 +141,86 @@ def amendable_chunks(paths: ReviewPaths) -> list[tuple[Path, dict[str, Any]]]:
             str(item[1].get("document_id", "")),
             str(item[1].get("chunk_id", "")),
         ),
+    )
+
+
+def finalize_ready_documents(
+    paths: ReviewPaths = ReviewPaths(),
+    *,
+    input_fn: Callable[[str], str] | None = None,
+    output_fn: Callable[[str], None] = print,
+) -> None:
+    read_input = input_fn or input
+    ready: list[tuple[Path, dict[str, Any]]] = []
+    resolved_statuses = {"approved", "edited", "rejected", "split", "merged"}
+    allowed_document_states = {"approved", "chunk_proposed", "chunk_review"}
+    for proposal_file in sorted(paths.proposals_dir.glob("*.jsonl")):
+        reviewed_file = paths.reviewed_dir / proposal_file.name
+        chunks = load_review_chunks(proposal_file, reviewed_file)
+        by_document: dict[str, list[dict[str, Any]]] = {}
+        for chunk in chunks:
+            by_document.setdefault(str(chunk.get("document_id", "")), []).append(chunk)
+        for document_id, document_chunks in by_document.items():
+            if (
+                document_id
+                and get_state(document_id, paths.state_file) in allowed_document_states
+                and document_chunks
+                and all(chunk.get("status") in resolved_statuses for chunk in document_chunks)
+            ):
+                exemplar = document_chunks[0]
+                ready.append(
+                    (
+                        proposal_file,
+                        {
+                            "id": document_id,
+                            "document_id": document_id,
+                            "title": exemplar.get("title", ""),
+                            "category": exemplar.get("category", "unknown"),
+                        },
+                    )
+                )
+    if not ready:
+        output_fn("No fully reviewed documents are waiting to be finalized.")
+        return
+
+    counts: dict[str, int] = {}
+    for _, document in ready:
+        category = str(document.get("category", "unknown"))
+        counts[category] = counts.get(category, 0) + 1
+    category = _select_category(
+        counts,
+        kind="finalization",
+        count_label="ready",
+        input_fn=read_input,
+        output_fn=output_fn,
+    )
+    if category is None:
+        output_fn("Finalization cancelled.")
+        return
+    selected = _select_item(
+        [item for item in ready if str(item[1].get("category", "unknown")) == category],
+        kind="document",
+        input_fn=read_input,
+        output_fn=output_fn,
+    )
+    if selected is None:
+        output_fn("Finalization cancelled.")
+        return
+    proposal_file, document = selected
+    reviewed_file = paths.reviewed_dir / proposal_file.name
+    final_file = paths.final_dir / proposal_file.name
+    count = finalize_chunks(
+        proposal_file,
+        reviewed_file,
+        final_file,
+        document_id=str(document["id"]),
+        state_file=paths.state_file,
+    )
+    output_fn(
+        f"Finalized {count} chunks for {document['id']}.\n"
+        f"Final chunks: {final_file}\n"
+        f"Review decisions: {reviewed_file}\n"
+        "The proposals file remains unchanged as the generated baseline."
     )
 
 
@@ -323,14 +413,51 @@ def _select_category(
             output_fn(f"No {kind} category matches {selection!r}.")
 
 
-def _read_multiline(input_fn: Callable[[str], str], output_fn: Callable[[str], None]) -> str:
-    output_fn("Enter text; finish with a line containing only '.'")
+def _read_multiline(
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> str | None:
+    output_fn("Paste text; finish with :save on its own line (:cancel discards it).")
     lines: list[str] = []
     while True:
         line = input_fn("")
-        if line == ".":
+        if line == ":save":
             return "\n".join(lines).strip()
+        if line == ":cancel":
+            return None
         lines.append(line)
+
+
+def _finalize_document_if_ready(
+    proposal_file: Path,
+    document_id: str,
+    paths: ReviewPaths,
+    output_fn: Callable[[str], None],
+) -> None:
+    chunks = [
+        chunk
+        for chunk in load_review_chunks(
+            proposal_file,
+            paths.reviewed_dir / proposal_file.name,
+        )
+        if chunk.get("document_id") == document_id
+    ]
+    resolved = {"approved", "edited", "rejected", "split", "merged"}
+    if not chunks or any(chunk.get("status") not in resolved for chunk in chunks):
+        return
+    set_state(document_id, "chunk_review", state_file=paths.state_file)
+    final_file = paths.final_dir / proposal_file.name
+    count = finalize_chunks(
+        proposal_file,
+        paths.reviewed_dir / proposal_file.name,
+        final_file,
+        document_id=document_id,
+        state_file=paths.state_file,
+    )
+    output_fn(
+        f"All proposals resolved. Finalized {count} chunks for {document_id}.\n"
+        f"Final chunks: {final_file}"
+    )
 
 
 def review_documents(
@@ -552,35 +679,27 @@ def review_chunk_queue(
                     output_fn("Choose e to edit, or q to return to categories.")
                     continue
                 text = _read_multiline(read_input, output_fn)
+                if text is None:
+                    output_fn("Edit cancelled; finalized chunk was not changed.")
+                    continue
                 try:
-                    review_chunks(
+                    count = revise_final_chunk(
                         proposal_file,
                         paths.reviewed_dir / proposal_file.name,
-                        action="edit",
+                        paths.final_dir / proposal_file.name,
+                        document_id=document_id,
                         chunk_id=chunk["chunk_id"],
                         text=text,
                     )
                 except ValueError as exc:
                     output_fn(f"Not saved: {exc}")
                     continue
-                set_state(document_id, "chunk_review", state_file=paths.state_file)
-                try:
-                    count = finalize_chunks(
-                        proposal_file,
-                        paths.reviewed_dir / proposal_file.name,
-                        paths.final_dir / proposal_file.name,
-                        document_id=document_id,
-                        state_file=paths.state_file,
-                    )
-                except ValueError as exc:
-                    output_fn(
-                        f"Edit saved, but final chunks were not updated: {exc}"
-                    )
-                else:
-                    output_fn(
-                        f"Updated {count} final chunks for {document_id}. "
-                        "The embedding index refreshes on the next retrieval."
-                    )
+                output_fn(
+                    f"Updated final chunk {chunk['chunk_id']} for {document_id}.\n"
+                    f"Finalized chunks for this document: {count}\n"
+                    f"Final file: {paths.final_dir / proposal_file.name}\n"
+                    "The embedding index refreshes on the next retrieval."
+                )
                 skipped.add(chunk["chunk_id"])
                 continue
 
@@ -617,6 +736,9 @@ def review_chunk_queue(
                 )
             elif action in {"e", "edit"}:
                 text = _read_multiline(read_input, output_fn)
+                if text is None:
+                    output_fn("Edit cancelled; proposal was not changed.")
+                    continue
                 try:
                     review_chunks(
                         proposal_file,
@@ -630,6 +752,9 @@ def review_chunk_queue(
                     continue
             elif action in {"s", "split"}:
                 text = _read_multiline(read_input, output_fn)
+                if text is None:
+                    output_fn("Split cancelled; proposal was not changed.")
+                    continue
                 try:
                     review_chunks(
                         proposal_file,
@@ -690,7 +815,11 @@ def review_chunk_queue(
 
             set_state(document_id, "chunk_review", state_file=paths.state_file)
             processed_by_document[document_id] = processed_by_document.get(document_id, 0) + 1
-            output_fn(f"Saved decision for {chunk['chunk_id']}.")
+            output_fn(
+                f"Saved {chunk['chunk_id']} as {action} in "
+                f"{paths.reviewed_dir / proposal_file.name}."
+            )
+            _finalize_document_if_ready(proposal_file, document_id, paths, output_fn)
 
 
 def _load_last_mode(session_file: Path) -> str | None:
@@ -701,7 +830,7 @@ def _load_last_mode(session_file: Path) -> str | None:
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid review session file {session_file}: {exc}") from exc
     mode = session.get("mode") if isinstance(session, dict) else None
-    return mode if mode in {"documents", "chunks", "amend"} else None
+    return mode if mode in {"documents", "chunks", "finalize", "amend"} else None
 
 
 def _save_last_mode(session_file: Path, mode: str) -> None:
@@ -723,9 +852,10 @@ def run_review(
         "HaUI RAG Review\n\n"
         "1. Review documents\n"
         "2. Review pending chunks\n"
-        "3. Edit approved/final chunks\n"
-        "4. Continue previous review\n"
-        "5. Exit"
+        "3. Finalize fully reviewed documents\n"
+        "4. Edit final chunks\n"
+        "5. Continue previous review\n"
+        "6. Exit"
     )
     try:
         while True:
@@ -734,7 +864,7 @@ def run_review(
             except EOFError:
                 output_fn("\nLeaving review. Saved decisions are available to resume.")
                 return 0
-            if choice in {"5", "q", "quit"}:
+            if choice in {"6", "q", "quit"}:
                 return 0
             if choice in {"1", "documents", "document"}:
                 _save_last_mode(paths.session_file, "documents")
@@ -744,11 +874,15 @@ def run_review(
                 _save_last_mode(paths.session_file, "chunks")
                 review_chunk_queue(paths, input_fn=read_input, output_fn=output_fn)
                 return 0
-            if choice in {"3", "amend", "edit-final"}:
+            if choice in {"3", "finalize"}:
+                _save_last_mode(paths.session_file, "finalize")
+                finalize_ready_documents(paths, input_fn=read_input, output_fn=output_fn)
+                return 0
+            if choice in {"4", "amend", "edit-final"}:
                 _save_last_mode(paths.session_file, "amend")
                 review_chunk_queue(paths, amend=True, input_fn=read_input, output_fn=output_fn)
                 return 0
-            if choice in {"4", "resume"}:
+            if choice in {"5", "resume"}:
                 mode = _load_last_mode(paths.session_file)
                 if mode == "documents":
                     review_documents(paths, input_fn=read_input, output_fn=output_fn, editor=editor)
@@ -756,12 +890,15 @@ def run_review(
                 if mode == "chunks":
                     review_chunk_queue(paths, input_fn=read_input, output_fn=output_fn)
                     return 0
+                if mode == "finalize":
+                    finalize_ready_documents(paths, input_fn=read_input, output_fn=output_fn)
+                    return 0
                 if mode == "amend":
                     review_chunk_queue(paths, amend=True, input_fn=read_input, output_fn=output_fn)
                     return 0
                 output_fn("No previous review session found. Choose documents or chunks.")
                 continue
-            output_fn("Choose 1, 2, 3, 4, or 5.")
+            output_fn("Choose 1, 2, 3, 4, 5, or 6.")
     except KeyboardInterrupt:
         output_fn("\nReview interrupted. Saved decisions are available to resume.")
         return 0
