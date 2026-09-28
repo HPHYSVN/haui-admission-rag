@@ -13,7 +13,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from rag.chunk_review import SPLIT_DELIMITER, load_review_chunks, review_chunks
+from rag.chunk_review import (
+    finalize_chunks,
+    load_review_chunks,
+    review_chunks,
+)
 from rag.config import ROOT_DIR
 from rag.document_workflow import (
     DEFAULT_STATE_FILE,
@@ -26,8 +30,11 @@ DEFAULT_DOCUMENTS_DIR = ROOT_DIR / "data" / "documents"
 DEFAULT_REVIEW_DIR = ROOT_DIR / "data" / "review"
 DEFAULT_PROPOSALS_DIR = ROOT_DIR / "data" / "chunks" / "proposals"
 DEFAULT_REVIEWED_DIR = ROOT_DIR / "data" / "chunks" / "reviewed"
+DEFAULT_FINAL_DIR = ROOT_DIR / "data" / "chunks" / "final"
 DEFAULT_SESSION_FILE = ROOT_DIR / "data" / "workflow" / "review-session.json"
+PICKER_PAGE_SIZE = 10
 PROCESSED_DOCUMENT_STATES = {"approved", "rejected", "chunk_proposed", "chunk_review", "final", "indexed"}
+_EDITOR_PROCESSES: list[subprocess.Popen] = []
 
 
 @dataclass(frozen=True)
@@ -36,6 +43,7 @@ class ReviewPaths:
     review_dir: Path = DEFAULT_REVIEW_DIR
     proposals_dir: Path = DEFAULT_PROPOSALS_DIR
     reviewed_dir: Path = DEFAULT_REVIEWED_DIR
+    final_dir: Path = DEFAULT_FINAL_DIR
     state_file: Path = DEFAULT_STATE_FILE
     session_file: Path = DEFAULT_SESSION_FILE
 
@@ -107,6 +115,25 @@ def pending_chunks(paths: ReviewPaths) -> list[tuple[Path, dict[str, Any]]]:
     return pending
 
 
+def amendable_chunks(paths: ReviewPaths) -> list[tuple[Path, dict[str, Any]]]:
+    amendable: list[tuple[Path, dict[str, Any]]] = []
+    for proposal_file in sorted(paths.proposals_dir.glob("*.jsonl")):
+        reviewed_file = paths.reviewed_dir / proposal_file.name
+        amendable.extend(
+            (proposal_file, chunk)
+            for chunk in load_review_chunks(proposal_file, reviewed_file)
+            if chunk.get("status") in {"approved", "edited"}
+        )
+    return sorted(
+        amendable,
+        key=lambda item: (
+            str(item[1].get("category", "")),
+            str(item[1].get("document_id", "")),
+            str(item[1].get("chunk_id", "")),
+        ),
+    )
+
+
 def _print_document(
     output_fn: Callable[[str], None],
     document: dict[str, Any],
@@ -124,20 +151,58 @@ def _print_document(
     output_fn("[a] Approve & save  [e] Save edits  [r] Reject  [n] Next  [q] Quit")
 
 
-def _launch_editor(path: Path, editor: str | None = None) -> None:
+def _launch_editor(path: Path, editor: str | None = None) -> bool:
     command = editor or os.environ.get("VISUAL") or os.environ.get("EDITOR")
+    command_parts = shlex.split(command) if command else []
+    is_vscode = bool(command_parts) and Path(command_parts[0]).name in {
+        "code",
+        "code-insiders",
+        "codium",
+    }
+    if is_vscode:
+        argv = [part for part in command_parts if part != "--wait"] + [str(path)]
+    elif not command and shutil.which("code"):
+        argv = ["code", "--reuse-window", str(path)]
+        is_vscode = True
+    else:
+        argv = []
+    if is_vscode:
+        try:
+            _EDITOR_PROCESSES[:] = [
+                process for process in _EDITOR_PROCESSES if process.poll() is None
+            ]
+            process = subprocess.Popen(
+                argv,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            _EDITOR_PROCESSES.append(process)
+            return True
+        except OSError as exc:
+            raise RuntimeError(f"Could not open review file with {argv[0]!r}: {exc}") from exc
     if command:
-        argv = [*shlex.split(command), str(path)]
-    elif shutil.which("code"):
-        argv = ["code", "--reuse-window", "--wait", str(path)]
+        argv = [*command_parts, str(path)]
     elif os.name == "nt":
         argv = ["notepad", str(path)]
+    elif shutil.which("xdg-open"):
+        argv = ["xdg-open", str(path)]
     else:
         argv = ["vi", str(path)]
     try:
         subprocess.run(argv, check=True)
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RuntimeError(f"Could not open review file with {argv[0]!r}: {exc}") from exc
+    return False
+
+
+def _item_matches(item: dict[str, Any], query: str) -> bool:
+    searchable = " ".join(
+        str(item.get(field, ""))
+        for field in ("id", "chunk_id", "title", "category", "text", "document_id", "year")
+    )
+    return query in searchable.casefold()
 
 
 def _select_item(
@@ -147,59 +212,115 @@ def _select_item(
     input_fn: Callable[[str], str],
     output_fn: Callable[[str], None],
 ) -> tuple[Path, dict[str, Any]] | None:
-    all_items = items
-    while items:
-        output_fn(f"\nPending {kind}s: {len(items)}")
-        for index, (_, item) in enumerate(items[:20], 1):
+    search = ""
+    page = 0
+    while True:
+        matches = [
+            pair
+            for pair in items
+            if _item_matches(pair[1], search)
+        ]
+        if not matches:
+            output_fn(f"No {kind}s match {search!r}.")
+            search = ""
+            page = 0
+            continue
+        page_count = (len(matches) + PICKER_PAGE_SIZE - 1) // PICKER_PAGE_SIZE
+        page = min(page, page_count - 1)
+        start = page * PICKER_PAGE_SIZE
+        visible = matches[start : start + PICKER_PAGE_SIZE]
+        output_fn(f"\n{kind.title()}s: {len(matches)} match(es) | page {page + 1}/{page_count}")
+        for index, (_, item) in enumerate(visible, start + 1):
             identifier = item.get("id", item.get("chunk_id", ""))
             title = str(item.get("title", item.get("text", ""))).replace("\n", " ")
             output_fn(
                 f"{index:>2}. {identifier} | {item.get('category', 'unknown')} | "
                 f"{title[:90]}"
             )
-        if len(items) > 20:
-            output_fn("Showing first 20; search by ID, title, category, or chunk text.")
+        if search:
+            output_fn(f"Filter: {search}")
         try:
             selection = input_fn(
-                f"Select {kind} number or search text (Enter = first, q = quit): "
+                "Number = open; text = search; >/< = next/previous page; "
+                "Enter = first match; q = back: "
             ).strip()
         except EOFError:
             return None
         if selection.casefold() in {"q", "quit"}:
             return None
         if not selection:
-            return items[0]
+            return matches[0]
+        if selection == ">":
+            page = (page + 1) % page_count
+            continue
+        if selection == "<":
+            page = (page - 1) % page_count
+            continue
         if selection.isdigit():
             index = int(selection)
-            if 1 <= index <= min(20, len(items)):
-                return items[index - 1]
-            output_fn("Selection number is outside the displayed list.")
+            if 1 <= index <= len(matches):
+                return matches[index - 1]
+            search = selection.casefold()
+            page = 0
+            filtered = [
+                pair
+                for pair in items
+                if _item_matches(pair[1], search)
+            ]
+            if len(filtered) == 1:
+                return filtered[0]
             continue
+        search = selection.casefold()
+        page = 0
+        filtered = [
+            pair
+            for pair in items
+            if _item_matches(pair[1], search)
+        ]
+        if len(filtered) == 1:
+            return filtered[0]
 
-        query = selection.casefold()
-        exact = [
-            item
-            for item in items
-            if str(item[1].get("id", item[1].get("chunk_id", ""))).casefold() == query
-        ]
-        if exact:
-            return exact[0]
-        matches = [
-            item
-            for item in all_items
-            if query
-            in " ".join(
-                str(item[1].get(field, ""))
-                for field in ("id", "chunk_id", "title", "category", "text", "document_id")
-            ).casefold()
-        ]
-        if not matches:
-            output_fn(f"No pending {kind} matches {selection!r}.")
+
+def _select_category(
+    counts: dict[str, int],
+    *,
+    kind: str,
+    count_label: str = "pending",
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> str | None:
+    all_categories = sorted(counts)
+    categories = all_categories
+    while categories:
+        output_fn(f"\nSelect a {kind} category:")
+        for index, category in enumerate(categories, 1):
+            output_fn(f"{index:>2}. {category} ({counts[category]} {count_label})")
+        try:
+            selection = input_fn("Category number or name (q = quit): ").strip()
+        except EOFError:
+            return None
+        if selection.casefold() in {"q", "quit"}:
+            return None
+        if selection.isdigit():
+            index = int(selection)
+            if 1 <= index <= len(categories):
+                return categories[index - 1]
+            output_fn(f"Choose a category number from 1 to {len(categories)}.")
             continue
+        exact = next((category for category in categories if category.casefold() == selection.casefold()), None)
+        if exact:
+            return exact
+        matches = [
+            category
+            for category in all_categories
+            if selection.casefold() in category.casefold()
+        ]
         if len(matches) == 1:
             return matches[0]
-        items = matches
-    return None
+        if matches:
+            categories = matches
+        else:
+            output_fn(f"No {kind} category matches {selection!r}.")
 
 
 def _read_multiline(input_fn: Callable[[str], str], output_fn: Callable[[str], None]) -> str:
@@ -221,81 +342,105 @@ def review_documents(
 ) -> None:
     read_input = input_fn or input
     all_documents = _read_documents(paths.documents_dir)
-    category_counts: dict[str, int] = {}
+    categories: set[str] = set()
     category_processed: dict[str, int] = {}
     for _, document in all_documents:
         category = str(document.get("category", "unknown"))
-        category_counts[category] = category_counts.get(category, 0) + 1
+        categories.add(category)
         if get_state(document["id"], paths.state_file) in PROCESSED_DOCUMENT_STATES:
             category_processed[category] = category_processed.get(category, 0) + 1
 
     while True:
         queue = pending_documents(paths)
+        counts = {category: 0 for category in categories}
+        for _, document in queue:
+            category = str(document.get("category", "unknown"))
+            counts[category] = counts.get(category, 0) + 1
         if not queue:
             output_fn("✓ No pending document review items.")
-            output_fn("All documents have been processed.")
             return
-
-        selected = _select_item(
-            queue,
+        category = _select_category(
+            counts,
             kind="document",
             input_fn=read_input,
             output_fn=output_fn,
         )
-        if selected is None:
+        if category is None:
             output_fn("Leaving review. Saved decisions are available to resume.")
             return
+        skipped: set[str] = set()
+        while True:
+            category_queue = [
+                (path, document)
+                for path, document in pending_documents(paths)
+                if str(document.get("category", "unknown")) == category
+                and document["id"] not in skipped
+            ]
+            if not category_queue:
+                output_fn(f"No more pending documents in {category}.")
+                break
+            selected = _select_item(
+                category_queue,
+                kind="document",
+                input_fn=read_input,
+                output_fn=output_fn,
+            )
+            if selected is None:
+                break
+            path, document = selected
+            index = category_processed.get(category, 0) + 1
+            total = sum(
+                str(record.get("category", "unknown")) == category
+                for _, record in all_documents
+            )
+            _print_document(output_fn, document, min(index, total), total)
+            from scripts.apply_review import apply_review_file
+            from scripts.render_review import render
 
-        path, document = selected
-        category = str(document.get("category", "unknown"))
-        index = category_processed.get(category, 0) + 1
-        total = category_counts.get(category, 1)
-        _print_document(output_fn, document, min(index, total), total)
-        from scripts.apply_review import apply_review_file
-        from scripts.render_review import render
-
-        review_file = paths.review_dir / category / f"{document['id']}.md"
-        render(path, review_file.parent, document["id"], state_file=paths.state_file)
-        _launch_editor(review_file, editor)
-        try:
-            action = read_input("Action: ").strip().casefold()
-        except EOFError:
-            output_fn("\nLeaving review. Saved decisions are available to resume.")
-            return
-
-        if action in {"q", "quit"}:
-            output_fn("Leaving review. Saved decisions are available to resume.")
-            return
-        if action in {"n", "next"}:
-            continue
-        if action in {"a", "approve"}:
-            apply_review_file(path, review_file, state_file=paths.state_file)
-            review_document(document["id"], "approve", state_file=paths.state_file)
-            category_processed[category] = category_processed.get(category, 0) + 1
-            output_fn(f"Approved {document['id']}.")
-            continue
-        if action in {"e", "edit", "s", "save"}:
-            apply_review_file(path, review_file, state_file=paths.state_file)
-            output_fn(f"Applied content edit to {document['id']}; it remains pending approval.")
-            continue
-        if action in {"r", "reject"}:
+            review_file = paths.review_dir / category / f"{document['id']}.md"
+            render(path, review_file.parent, document["id"], state_file=paths.state_file)
+            opened_in_background = _launch_editor(review_file, editor)
+            if opened_in_background:
+                output_fn("VS Code opened in the background. Save the Markdown, then return here.")
             try:
-                confirm = read_input(f"Reject {document['id']}? [y/N] ").strip().casefold()
+                action = read_input("Action: ").strip().casefold()
             except EOFError:
-                output_fn("\nLeaving review. No rejection was saved.")
+                output_fn("\nLeaving review. Saved decisions are available to resume.")
                 return
-            if confirm != "y":
+            if action in {"q", "quit"}:
+                output_fn("Leaving review. Saved decisions are available to resume.")
+                return
+            if action in {"n", "next"}:
+                skipped.add(document["id"])
                 continue
-            try:
-                note = read_input("Reason (optional): ").strip()
-            except EOFError:
-                output_fn("\nLeaving review. No rejection was saved.")
-                return
-            review_document(document["id"], "reject", note=note, state_file=paths.state_file)
-            category_processed[category] = category_processed.get(category, 0) + 1
-            output_fn(f"Rejected {document['id']}.")
-            continue
-        output_fn("Choose a, e, r, n, or q.")
+            if action in {"a", "approve"}:
+                apply_review_file(path, review_file, state_file=paths.state_file)
+                review_document(document["id"], "approve", state_file=paths.state_file)
+                category_processed[category] = category_processed.get(category, 0) + 1
+                output_fn(f"Approved {document['id']}.")
+                continue
+            if action in {"e", "edit", "s", "save"}:
+                apply_review_file(path, review_file, state_file=paths.state_file)
+                output_fn(f"Applied content edit to {document['id']}; it remains pending approval.")
+                continue
+            if action in {"r", "reject"}:
+                try:
+                    confirm = read_input(f"Reject {document['id']}? [y/N] ").strip().casefold()
+                except EOFError:
+                    output_fn("\nLeaving review. No rejection was saved.")
+                    return
+                if confirm != "y":
+                    continue
+                try:
+                    note = read_input("Reason (optional): ").strip()
+                except EOFError:
+                    output_fn("\nLeaving review. No rejection was saved.")
+                    return
+                review_document(document["id"], "reject", note=note, state_file=paths.state_file)
+                category_processed[category] = category_processed.get(category, 0) + 1
+                output_fn(f"Rejected {document['id']}.")
+                continue
+            output_fn("Choose a, e, r, n, or q.")
 
 
 def _print_chunk(
@@ -326,6 +471,7 @@ def _print_chunk(
 def review_chunk_queue(
     paths: ReviewPaths = ReviewPaths(),
     *,
+    amend: bool = False,
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] = print,
 ) -> None:
@@ -334,148 +480,217 @@ def review_chunk_queue(
     skipped: set[str] = set()
 
     while True:
-        queue = [
-            item for item in pending_chunks(paths)
-            if item[1]["chunk_id"] not in skipped
-        ]
+        source_queue = amendable_chunks(paths) if amend else pending_chunks(paths)
+        queue = [item for item in source_queue if item[1]["chunk_id"] not in skipped]
         if not queue:
-            output_fn("✓ No pending chunk review items.")
-            output_fn("All chunks have been processed.")
+            message = "approved/final chunks to edit" if amend else "pending chunk review items"
+            output_fn(f"✓ No {message} remain.")
             return
-        selected = _select_item(
-            queue,
+        categories = {
+            str(document.get("category", "unknown"))
+            for _, document in _read_documents(paths.documents_dir)
+        }
+        categories.update(str(chunk.get("category", "unknown")) for _, chunk in source_queue)
+        counts = {category: 0 for category in categories}
+        for _, chunk in queue:
+            category = str(chunk.get("category", "unknown"))
+            counts[category] = counts.get(category, 0) + 1
+        category = _select_category(
+            counts,
             kind="chunk",
+            count_label="approved/final" if amend else "pending",
             input_fn=read_input,
             output_fn=output_fn,
         )
-        if selected is None:
+        if category is None:
             output_fn("Leaving review. Saved decisions are available to resume.")
             return
-        proposal_file, chunk = selected
-        document_id = str(chunk.get("document_id", ""))
-        all_for_document = [
-            item for item in pending_chunks(paths)
-            if item[1].get("document_id") == document_id
-        ]
-        total = len(all_for_document) + processed_by_document.get(document_id, 0)
-        index = processed_by_document.get(document_id, 0) + 1
-        _print_chunk(output_fn, chunk, min(index, total), total)
-        try:
-            action = read_input("Action: ").strip().casefold()
-        except EOFError:
-            output_fn("\nLeaving review. Saved decisions are available to resume.")
-            return
-
-        if action in {"q", "quit"}:
-            output_fn("Leaving review. Saved decisions are available to resume.")
-            return
-        if action in {"n", "next"}:
-            skipped.add(chunk["chunk_id"])
-            processed_by_document[document_id] = processed_by_document.get(document_id, 0) + 1
-            continue
-        if action in {"r", "reject"}:
-            try:
-                confirm = read_input(f"Reject {chunk['chunk_id']}? [y/N] ").strip().casefold()
-            except EOFError:
-                output_fn("\nLeaving review. No rejection was saved.")
-                return
-            if confirm != "y":
-                continue
-            try:
-                note = read_input("Reason (optional): ").strip()
-            except EOFError:
-                output_fn("\nLeaving review. No rejection was saved.")
-                return
-            review_chunks(
-                proposal_file,
-                paths.reviewed_dir / proposal_file.name,
-                action="reject",
-                chunk_id=chunk["chunk_id"],
-                note=note,
-            )
-        elif action in {"a", "approve"}:
-            review_chunks(
-                proposal_file,
-                paths.reviewed_dir / proposal_file.name,
-                action="approve",
-                chunk_id=chunk["chunk_id"],
-            )
-        elif action in {"e", "edit"}:
-            text = _read_multiline(read_input, output_fn)
-            try:
-                review_chunks(
-                    proposal_file,
-                    paths.reviewed_dir / proposal_file.name,
-                    action="edit",
-                    chunk_id=chunk["chunk_id"],
-                    text=text,
-                )
-            except ValueError as exc:
-                output_fn(f"Not saved: {exc}")
-                continue
-        elif action in {"s", "split"}:
-            text = _read_multiline(read_input, output_fn)
-            try:
-                review_chunks(
-                    proposal_file,
-                    paths.reviewed_dir / proposal_file.name,
-                    action="split",
-                    chunk_id=chunk["chunk_id"],
-                    text=text,
-                )
-            except ValueError as exc:
-                output_fn(f"Not saved: {exc}")
-                continue
-        elif action in {"m", "merge"}:
-            candidates = [
-                candidate
-                for candidate_file, candidate in queue[1:]
-                if candidate_file.name == proposal_file.name
-                and candidate.get("document_id") == document_id
+        skipped_in_category: set[str] = set()
+        while True:
+            category_queue = [
+                item
+                for item in (amendable_chunks(paths) if amend else pending_chunks(paths))
+                if str(item[1].get("category", "unknown")) == category
+                and item[1]["chunk_id"] not in skipped
+                and item[1]["chunk_id"] not in skipped_in_category
             ]
-            if not candidates:
-                output_fn("No other pending chunk from this document is available to merge.")
-                continue
-            for candidate_index, candidate in enumerate(candidates, 1):
-                output_fn(
-                    f"{candidate_index}. {candidate['chunk_id']}: "
-                    f"{str(candidate.get('text', '')).replace(chr(10), ' ')[:120]}"
-                )
-            try:
-                selection = read_input("Merge with item number (blank cancels): ").strip()
-            except EOFError:
-                output_fn("\nLeaving review. No merge was saved.")
-                return
-            if not selection:
-                continue
-            if not selection.isdigit() or not 1 <= int(selection) <= len(candidates):
-                output_fn("Invalid selection; no merge was saved.")
-                continue
-            other = candidates[int(selection) - 1]
-            try:
-                confirm = read_input(
-                    f"Merge {chunk['chunk_id']} with {other['chunk_id']}? [y/N] "
-                ).strip().casefold()
-            except EOFError:
-                output_fn("\nLeaving review. No merge was saved.")
-                return
-            if confirm != "y":
-                continue
-            review_chunks(
-                proposal_file,
-                paths.reviewed_dir / proposal_file.name,
-                action="merge",
-                chunk_id=chunk["chunk_id"],
-                other_chunk_id=other["chunk_id"],
+            if not category_queue:
+                output_fn(f"No more chunks to review in {category}.")
+                break
+            selected = _select_item(
+                category_queue,
+                kind="chunk",
+                input_fn=read_input,
+                output_fn=output_fn,
             )
-        else:
-            output_fn("Choose a, e, s, m, r, n, or q.")
-            continue
+            if selected is None:
+                break
+            proposal_file, chunk = selected
+            document_id = str(chunk.get("document_id", ""))
+            all_for_document = [
+                item for item in (amendable_chunks(paths) if amend else pending_chunks(paths))
+                if item[1].get("document_id") == document_id
+            ]
+            total = len(all_for_document) + processed_by_document.get(document_id, 0)
+            index = processed_by_document.get(document_id, 0) + 1
+            _print_chunk(output_fn, chunk, min(index, max(total, 1)), max(total, 1))
+            if amend:
+                output_fn("[e] Edit and update finalized chunks  [q] Back to category list")
+            try:
+                action = read_input("Action: ").strip().casefold()
+            except EOFError:
+                output_fn("\nLeaving review. Saved decisions are available to resume.")
+                return
 
-        set_state(document_id, "chunk_review", state_file=paths.state_file)
-        skipped.discard(chunk["chunk_id"])
-        processed_by_document[document_id] = processed_by_document.get(document_id, 0) + 1
-        output_fn(f"Saved decision for {chunk['chunk_id']}.")
+            if action in {"q", "quit"}:
+                if amend:
+                    break
+                output_fn("Leaving review. Saved decisions are available to resume.")
+                return
+            if amend:
+                if action not in {"e", "edit"}:
+                    output_fn("Choose e to edit, or q to return to categories.")
+                    continue
+                text = _read_multiline(read_input, output_fn)
+                try:
+                    review_chunks(
+                        proposal_file,
+                        paths.reviewed_dir / proposal_file.name,
+                        action="edit",
+                        chunk_id=chunk["chunk_id"],
+                        text=text,
+                    )
+                except ValueError as exc:
+                    output_fn(f"Not saved: {exc}")
+                    continue
+                set_state(document_id, "chunk_review", state_file=paths.state_file)
+                try:
+                    count = finalize_chunks(
+                        proposal_file,
+                        paths.reviewed_dir / proposal_file.name,
+                        paths.final_dir / proposal_file.name,
+                        document_id=document_id,
+                        state_file=paths.state_file,
+                    )
+                except ValueError as exc:
+                    output_fn(
+                        f"Edit saved, but final chunks were not updated: {exc}"
+                    )
+                else:
+                    output_fn(
+                        f"Updated {count} final chunks for {document_id}. "
+                        "The embedding index refreshes on the next retrieval."
+                    )
+                skipped.add(chunk["chunk_id"])
+                continue
+
+            if action in {"n", "next"}:
+                skipped_in_category.add(chunk["chunk_id"])
+                processed_by_document[document_id] = processed_by_document.get(document_id, 0) + 1
+                continue
+            if action in {"r", "reject"}:
+                try:
+                    confirm = read_input(f"Reject {chunk['chunk_id']}? [y/N] ").strip().casefold()
+                except EOFError:
+                    output_fn("\nLeaving review. No rejection was saved.")
+                    return
+                if confirm != "y":
+                    continue
+                try:
+                    note = read_input("Reason (optional): ").strip()
+                except EOFError:
+                    output_fn("\nLeaving review. No rejection was saved.")
+                    return
+                review_chunks(
+                    proposal_file,
+                    paths.reviewed_dir / proposal_file.name,
+                    action="reject",
+                    chunk_id=chunk["chunk_id"],
+                    note=note,
+                )
+            elif action in {"a", "approve"}:
+                review_chunks(
+                    proposal_file,
+                    paths.reviewed_dir / proposal_file.name,
+                    action="approve",
+                    chunk_id=chunk["chunk_id"],
+                )
+            elif action in {"e", "edit"}:
+                text = _read_multiline(read_input, output_fn)
+                try:
+                    review_chunks(
+                        proposal_file,
+                        paths.reviewed_dir / proposal_file.name,
+                        action="edit",
+                        chunk_id=chunk["chunk_id"],
+                        text=text,
+                    )
+                except ValueError as exc:
+                    output_fn(f"Not saved: {exc}")
+                    continue
+            elif action in {"s", "split"}:
+                text = _read_multiline(read_input, output_fn)
+                try:
+                    review_chunks(
+                        proposal_file,
+                        paths.reviewed_dir / proposal_file.name,
+                        action="split",
+                        chunk_id=chunk["chunk_id"],
+                        text=text,
+                    )
+                except ValueError as exc:
+                    output_fn(f"Not saved: {exc}")
+                    continue
+            elif action in {"m", "merge"}:
+                candidates = [
+                    candidate
+                    for candidate_file, candidate in category_queue
+                    if candidate_file.name == proposal_file.name
+                    and candidate.get("document_id") == document_id
+                    and candidate.get("chunk_id") != chunk["chunk_id"]
+                ]
+                if not candidates:
+                    output_fn("No other pending chunk from this document is available to merge.")
+                    continue
+                for candidate_index, candidate in enumerate(candidates, 1):
+                    output_fn(
+                        f"{candidate_index}. {candidate['chunk_id']}: "
+                        f"{str(candidate.get('text', '')).replace(chr(10), ' ')[:120]}"
+                    )
+                try:
+                    selection = read_input("Merge with item number (blank cancels): ").strip()
+                except EOFError:
+                    output_fn("\nLeaving review. No merge was saved.")
+                    return
+                if not selection:
+                    continue
+                if not selection.isdigit() or not 1 <= int(selection) <= len(candidates):
+                    output_fn("Invalid selection; no merge was saved.")
+                    continue
+                other = candidates[int(selection) - 1]
+                try:
+                    confirm = read_input(
+                        f"Merge {chunk['chunk_id']} with {other['chunk_id']}? [y/N] "
+                    ).strip().casefold()
+                except EOFError:
+                    output_fn("\nLeaving review. No merge was saved.")
+                    return
+                if confirm != "y":
+                    continue
+                review_chunks(
+                    proposal_file,
+                    paths.reviewed_dir / proposal_file.name,
+                    action="merge",
+                    chunk_id=chunk["chunk_id"],
+                    other_chunk_id=other["chunk_id"],
+                )
+            else:
+                output_fn("Choose a, e, s, m, r, n, or q.")
+                continue
+
+            set_state(document_id, "chunk_review", state_file=paths.state_file)
+            processed_by_document[document_id] = processed_by_document.get(document_id, 0) + 1
+            output_fn(f"Saved decision for {chunk['chunk_id']}.")
 
 
 def _load_last_mode(session_file: Path) -> str | None:
@@ -486,7 +701,7 @@ def _load_last_mode(session_file: Path) -> str | None:
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid review session file {session_file}: {exc}") from exc
     mode = session.get("mode") if isinstance(session, dict) else None
-    return mode if mode in {"documents", "chunks"} else None
+    return mode if mode in {"documents", "chunks", "amend"} else None
 
 
 def _save_last_mode(session_file: Path, mode: str) -> None:
@@ -504,7 +719,14 @@ def run_review(
     editor: str | None = None,
 ) -> int:
     read_input = input_fn or input
-    output_fn("HaUI RAG Review\n\n1. Review documents\n2. Review chunks\n3. Continue previous review\n4. Exit")
+    output_fn(
+        "HaUI RAG Review\n\n"
+        "1. Review documents\n"
+        "2. Review pending chunks\n"
+        "3. Edit approved/final chunks\n"
+        "4. Continue previous review\n"
+        "5. Exit"
+    )
     try:
         while True:
             try:
@@ -512,7 +734,7 @@ def run_review(
             except EOFError:
                 output_fn("\nLeaving review. Saved decisions are available to resume.")
                 return 0
-            if choice in {"4", "q", "quit"}:
+            if choice in {"5", "q", "quit"}:
                 return 0
             if choice in {"1", "documents", "document"}:
                 _save_last_mode(paths.session_file, "documents")
@@ -522,7 +744,11 @@ def run_review(
                 _save_last_mode(paths.session_file, "chunks")
                 review_chunk_queue(paths, input_fn=read_input, output_fn=output_fn)
                 return 0
-            if choice in {"3", "resume"}:
+            if choice in {"3", "amend", "edit-final"}:
+                _save_last_mode(paths.session_file, "amend")
+                review_chunk_queue(paths, amend=True, input_fn=read_input, output_fn=output_fn)
+                return 0
+            if choice in {"4", "resume"}:
                 mode = _load_last_mode(paths.session_file)
                 if mode == "documents":
                     review_documents(paths, input_fn=read_input, output_fn=output_fn, editor=editor)
@@ -530,9 +756,12 @@ def run_review(
                 if mode == "chunks":
                     review_chunk_queue(paths, input_fn=read_input, output_fn=output_fn)
                     return 0
+                if mode == "amend":
+                    review_chunk_queue(paths, amend=True, input_fn=read_input, output_fn=output_fn)
+                    return 0
                 output_fn("No previous review session found. Choose documents or chunks.")
                 continue
-            output_fn("Choose 1, 2, 3, or 4.")
+            output_fn("Choose 1, 2, 3, 4, or 5.")
     except KeyboardInterrupt:
         output_fn("\nReview interrupted. Saved decisions are available to resume.")
         return 0

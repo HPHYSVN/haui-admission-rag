@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from rag.document_workflow import get_state, set_state
+from rag.document_workflow import DEFAULT_STATE_FILE, get_state, set_state
 
 SPLIT_DELIMITER = "\n---CHUNK-SPLIT---\n"
 REVIEWABLE_STATUSES = {"proposal", "approved", "edited", "rejected", "split", "merged"}
@@ -214,8 +214,9 @@ def finalize_chunks(
     final_file: Path,
     *,
     document_id: str,
+    state_file: Path = DEFAULT_STATE_FILE,
 ) -> int:
-    state = get_state(document_id)
+    state = get_state(document_id, state_file)
     if state not in {"approved", "chunk_proposed", "chunk_review"}:
         raise ValueError(f"Document {document_id!r} is {state!r}; approve it before finalization")
     chunks = _merge_proposals_with_reviews(proposal_file, reviewed_file)
@@ -242,5 +243,5 @@ def finalize_chunks(
     updated = [chunk for chunk in existing if chunk.get("document_id") != document_id]
     updated.extend(final_chunks)
     _write_jsonl(final_file, updated)
-    set_state(document_id, "final")
+    set_state(document_id, "final", state_file=state_file)
     return len(final_chunks)

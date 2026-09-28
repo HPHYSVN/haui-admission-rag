@@ -54,18 +54,25 @@ Open the resumable terminal review menu:
 uv run python -m rag.cli review
 ```
 
-Choose `Review documents`, then enter a document number or search by ID, title,
-or category. The selected document is rendered to Markdown and opened in VS
-Code (`code --reuse-window --wait`) when the `code` command is available.
-Review its content in the editor; after closing the file, approve and save,
-save edits while leaving the document pending, reject, or skip it from the
-terminal. Reject/skip do not apply unsaved Markdown edits to source JSONL. The
-document body is no longer dumped into the terminal. Set `VISUAL` or `EDITOR`
-to override the editor command.
+Choose documents or chunks, then choose one of the 14 categories before seeing
+that category's items. The picker displays ten at a time; enter `>` or `<` to
+page and type a document/chunk ID, title, or text to filter. The displayed
+numbers refer to the current filtered list, so later pages are reachable and
+search is not limited to the first 20 records.
 
-Chunk review uses the same quick picker; search by chunk ID, document ID,
-title, category, or chunk text. Enter selects the first pending item, and `q`
-returns to the review menu.
+Documents are rendered to Markdown and opened in VS Code as a detached process
+(`code --reuse-window`), so the terminal remains available and the Electron
+warning messages do not pollute it. Save the Markdown in VS Code, switch back
+to the terminal, then approve and save (`a`), save edits but leave pending
+(`e`), reject (`r`), skip (`n`), or quit. Reject/skip do not apply unsaved
+Markdown edits to source JSONL. Set `VISUAL` or `EDITOR` to override the
+default opener.
+
+The chunk menu distinguishes pending proposals from approved/final chunks.
+Approved chunks may still be edited; the CLI re-finalizes that document after
+the edit, and retrieval refreshes its local embedding index automatically.
+If a document has unresolved chunk proposals, the edit is saved as a review
+decision but final chunks remain unchanged until those proposals are resolved.
 
 Render just the document being reviewed:
 
