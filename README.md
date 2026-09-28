@@ -49,13 +49,34 @@ Dự án được xây dựng theo mô hình RAG chuẩn:
    - Chuyển đổi dữ liệu sang JSONL theo schema chuẩn
    - Lưu tại `data/documents/*.jsonl`
 
-4. Truy xuất
-   - Tạo vector index cho tài liệu (sau giai đoạn corpus sạch)
-   - Tìm kiếm các document phù hợp với câu hỏi của người dùng
+4. Review, chunking và truy xuất
+   - Review từng document độc lập; machine-generated chunk chỉ là proposal
+   - Human có thể approve, edit, split, merge hoặc reject trước khi tạo final chunks
+   - Kết hợp BM25 với multilingual embeddings và lọc metadata năm/danh mục
 
-5. Tạo câu trả lời
-   - Kết hợp ngữ cảnh truy xuất với LLM
-   - Trả lời theo phong cách tư vấn tuyển sinh, rõ ràng, chính xác, có căn cứ
+5. Tạo câu trả lời và đánh giá
+   - Gửi các chunk truy xuất được tới endpoint vLLM tương thích OpenAI
+   - Trả lời có nguồn, không suy đoán khi ngữ cảnh không đủ
+   - Đánh giá retrieval bằng bộ câu hỏi và document ID kỳ vọng
+
+Xem workflow review tài liệu/chunk, hybrid retrieval và kết nối model vLLM tại
+[rag/README.md](rag/README.md).
+
+## Interactive review
+
+```bash
+uv run python -m rag.cli review
+```
+
+## CI
+
+Local checks:
+
+```bash
+uv sync --locked
+uv run python -m unittest discover -s tests -v
+uv run python scripts/validate.py
+```
 
 
 
@@ -71,5 +92,3 @@ Dự án tuân thủ các nguyên tắc sau để đảm bảo tri thức chất
 - Giữ nguyên định dạng JSONL và schema chuẩn
 - Mỗi document phải có `id`, `title`, `content`, `source_url`, `source_name`, `source_type`, `category`, `crawled_date`, `language`, `status`
 - Không thêm trường tùy ý ngoài schema chuẩn
-
-
