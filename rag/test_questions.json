@@ -1,0 +1,22 @@
+[
+  {
+    "question": "Học bổng mức 1 năm 2026 yêu cầu điểm xét tuyển tối thiểu bao nhiêu?",
+    "expected_document_id": "05_tuition_scholarship_001"
+  },
+  {
+    "question": "Các phương thức tuyển sinh đại học chính quy HaUI năm 2026 là gì?",
+    "expected_document_id": "01_admission_004"
+  },
+  {
+    "question": "Kết quả xét tuyển năm 2023 theo phương thức 2, 4, 5, 6 ở đâu?",
+    "expected_document_id": "03_cutoff_scores_007"
+  },
+  {
+    "question": "Hướng dẫn nhập học đại học chính quy năm 2026 như thế nào?",
+    "expected_document_id": "08_enrollment_procedure_002"
+  },
+  {
+    "question": "Thí sinh đăng ký dự tuyển đại học chính quy năm 2026 ra sao?",
+    "expected_document_id": "01_admission_005"
+  }
+]
