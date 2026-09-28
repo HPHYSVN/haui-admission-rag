@@ -15,7 +15,7 @@ from scripts.apply_review import apply_reviews, read_review
 from scripts.chunk import chunk_document, split_body
 from rag.bm25 import BM25Retriever, HybridRetriever, tokenize
 from rag.chunk_review import finalize_chunks, review_chunks
-from rag.document_workflow import get_state, review_document
+from rag.document_workflow import get_state, review_document, set_state
 from rag.embeddings import VectorIndex
 from rag.filters import matching_documents, query_filters, query_term_coverage
 from rag.pipeline import RAGPipeline, VLLMChatClient, create_messages, load_chunks
@@ -461,6 +461,7 @@ class InteractiveReviewTests(unittest.TestCase):
             review_dir=root / "review",
             proposals_dir=root / "proposals",
             reviewed_dir=root / "reviewed",
+            final_dir=root / "final",
             state_file=root / "workflow" / "documents.json",
             session_file=root / "workflow" / "review-session.json",
         )
@@ -487,6 +488,201 @@ class InteractiveReviewTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 progress_label(6, 5)
 
+    def test_picker_paginates_beyond_ten_and_category_selector_shows_all_categories(self) -> None:
+        from rag.review import _select_category, _select_item
+
+        categories = {f"{index:02d}_category": 0 for index in range(1, 15)}
+        category_output: list[str] = []
+        self.assertEqual(
+            _select_category(
+                categories,
+                kind="document",
+                input_fn=lambda _: "14",
+                output_fn=category_output.append,
+            ),
+            "14_category",
+        )
+        self.assertEqual(sum("pending)" in line for line in category_output), 14)
+
+        items = [
+            (Path("proposals.jsonl"), {"chunk_id": f"chunk-{index}", "text": "content"})
+            for index in range(1, 26)
+        ]
+        answers = iter([">", "11"])
+        selected = _select_item(
+            items,
+            kind="chunk",
+            input_fn=lambda _: next(answers),
+            output_fn=lambda _: None,
+        )
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected[1]["chunk_id"], "chunk-11")
+        year_match = _select_item(
+            [(Path("proposals.jsonl"), {"chunk_id": "chunk-2026", "year": 2026})],
+            kind="chunk",
+            input_fn=lambda _: "2026",
+            output_fn=lambda _: None,
+        )
+        self.assertEqual(year_match[1]["chunk_id"], "chunk-2026")
+
+    def test_approved_final_chunk_can_be_edited_and_refinalized(self) -> None:
+        from rag.review import review_chunk_queue
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            paths = self._paths(root)
+            paths.proposals_dir.mkdir()
+            proposal_file = paths.proposals_dir / "01_admission.jsonl"
+            proposal_file.write_text(
+                json.dumps({
+                    "chunk_id": "chunk-1",
+                    "document_id": "doc-1",
+                    "category": "01_admission",
+                    "title": "Admission",
+                    "source_url": "https://example.org",
+                    "text": "Original approved text",
+                    "status": "proposal",
+                }) + "\n",
+                encoding="utf-8",
+            )
+            reviewed_file = paths.reviewed_dir / proposal_file.name
+            review_chunks(proposal_file, reviewed_file, action="approve", chunk_id="chunk-1")
+            set_state("doc-1", "approved", state_file=paths.state_file)
+            finalize_chunks(
+                proposal_file,
+                reviewed_file,
+                paths.final_dir / proposal_file.name,
+                document_id="doc-1",
+                state_file=paths.state_file,
+            )
+
+            answers = iter([
+                "01_admission",
+                "chunk-1",
+                "e",
+                "Corrected final text",
+                ".",
+            ])
+            output: list[str] = []
+            review_chunk_queue(
+                paths,
+                amend=True,
+                input_fn=lambda _: next(answers),
+                output_fn=output.append,
+            )
+
+            final_record = json.loads(
+                (paths.final_dir / proposal_file.name).read_text(encoding="utf-8")
+            )
+            self.assertEqual(final_record["text"], "Corrected final text")
+            self.assertEqual(final_record["status"], "final")
+            self.assertEqual(get_state("doc-1", paths.state_file), "final")
+            self.assertTrue(any("Updated 1 final chunks" in line for line in output))
+
+    def test_full_document_to_final_chunk_review_and_later_edit_example(self) -> None:
+        from rag.review import review_chunk_queue, review_documents
+        from scripts.chunk import write_proposals
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            paths = self._paths(root)
+            paths.documents_dir.mkdir()
+            source_file = paths.documents_dir / "01_admission.jsonl"
+            document = {
+                "id": "01_admission_001",
+                "category": "01_admission",
+                "title": "Admission example",
+                "content": "Original content that will be reviewed.",
+                "source_url": "https://example.org/admission",
+            }
+            source_file.write_text(json.dumps(document) + "\n", encoding="utf-8")
+
+            def revise_document(markdown: Path, _editor: str | None = None) -> None:
+                markdown.write_text(
+                    "<!-- document-id: 01_admission_001 -->\n"
+                    "<!-- source-url: https://example.org/admission -->\n"
+                    "<!-- content-begin -->\n"
+                    "Reviewed source content for chunking.\n"
+                    "<!-- content-end -->\n",
+                    encoding="utf-8",
+                )
+
+            document_answers = iter(["01_admission", "01_admission_001", "a"])
+            with patch("rag.review._launch_editor", side_effect=revise_document):
+                review_documents(
+                    paths,
+                    input_fn=lambda _: next(document_answers),
+                    output_fn=lambda _: None,
+                )
+            reviewed_document = json.loads(source_file.read_text(encoding="utf-8"))
+            self.assertEqual(
+                reviewed_document["content"],
+                "Reviewed source content for chunking.",
+            )
+            self.assertEqual(get_state("01_admission_001", paths.state_file), "approved")
+
+            proposal_file = paths.proposals_dir / source_file.name
+            write_proposals([reviewed_document], proposal_file)
+            set_state("01_admission_001", "chunk_proposed", state_file=paths.state_file)
+            original_chunk = json.loads(proposal_file.read_text(encoding="utf-8"))
+            child_a = f"{original_chunk['chunk_id']}__a"
+            child_b = f"{original_chunk['chunk_id']}__b"
+            chunk_answers = iter([
+                "01_admission",
+                original_chunk["chunk_id"],
+                "s",
+                "Reviewed source",
+                "---CHUNK-SPLIT---",
+                "content for chunking.",
+                ".",
+                child_a,
+                "a",
+                child_b,
+                "a",
+            ])
+            review_chunk_queue(
+                paths,
+                input_fn=lambda _: next(chunk_answers),
+                output_fn=lambda _: None,
+            )
+
+            reviewed_file = paths.reviewed_dir / proposal_file.name
+            final_file = paths.final_dir / proposal_file.name
+            self.assertEqual(
+                finalize_chunks(
+                    proposal_file,
+                    reviewed_file,
+                    final_file,
+                    document_id="01_admission_001",
+                    state_file=paths.state_file,
+                ),
+                2,
+            )
+            amend_answers = iter([
+                "01_admission",
+                child_a,
+                "e",
+                "Revised after final approval.",
+                ".",
+                "q",
+                "q",
+            ])
+            review_chunk_queue(
+                paths,
+                amend=True,
+                input_fn=lambda _: next(amend_answers),
+                output_fn=lambda _: None,
+            )
+            final_chunks = [
+                json.loads(line)
+                for line in final_file.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(
+                next(chunk for chunk in final_chunks if chunk["chunk_id"] == child_a)["text"],
+                "Revised after final approval.",
+            )
+            self.assertEqual(len(final_chunks), 2)
+
     def test_document_edit_uses_markdown_and_preserves_other_source_fields(self) -> None:
         from rag.review import review_documents
 
@@ -512,7 +708,7 @@ class InteractiveReviewTests(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            answers = iter(["doc-1", "a"])
+            answers = iter(["01_admission", "doc-1", "a"])
             with patch("rag.review._launch_editor", side_effect=editor):
                 review_documents(
                     paths,
@@ -554,7 +750,7 @@ class InteractiveReviewTests(unittest.TestCase):
                 encoding="utf-8",
             )
             output: list[str] = []
-            answers = iter(["Unique scholarship guide", "a", "q"])
+            answers = iter(["01_admission", "Unique scholarship guide", "a", "q", "q"])
             with patch("rag.review._launch_editor"):
                 review_documents(
                     paths,
@@ -565,21 +761,35 @@ class InteractiveReviewTests(unittest.TestCase):
             self.assertEqual(get_state("doc-1", paths.state_file), "cleaned")
             self.assertNotIn("Long source content must stay out of the terminal.", "\n".join(output))
 
-    def test_editor_prefers_waitable_vscode_command(self) -> None:
+    def test_editor_opens_vscode_without_blocking_the_terminal(self) -> None:
         from rag.review import _launch_editor
 
         with tempfile.TemporaryDirectory() as temporary:
             markdown = Path(temporary) / "review.md"
             with (
                 patch("rag.review.shutil.which", return_value="/usr/bin/code"),
-                patch("rag.review.subprocess.run") as run,
+                patch("rag.review.subprocess.Popen") as popen,
                 patch.dict("os.environ", {"VISUAL": "", "EDITOR": ""}),
             ):
-                _launch_editor(markdown)
+                opened_in_background = _launch_editor(markdown)
             self.assertEqual(
-                run.call_args.args[0],
-                ["code", "--reuse-window", "--wait", str(markdown)],
+                popen.call_args.args[0],
+                ["code", "--reuse-window", str(markdown)],
             )
+            self.assertTrue(popen.call_args.kwargs["start_new_session"])
+            self.assertTrue(opened_in_background)
+
+    def test_editor_does_not_block_when_editor_env_uses_code_wait(self) -> None:
+        from rag.review import _launch_editor
+
+        with (
+            patch("rag.review.subprocess.Popen") as popen,
+            patch("rag.review.subprocess.run") as run,
+            patch.dict("os.environ", {"VISUAL": "", "EDITOR": "code --wait"}),
+        ):
+            _launch_editor(Path("/tmp/review.md"))
+        self.assertEqual(popen.call_args.args[0], ["code", str(Path("/tmp/review.md"))])
+        run.assert_not_called()
 
     def test_rejecting_document_does_not_apply_unapproved_markdown_edits(self) -> None:
         from rag.review import review_documents
@@ -608,7 +818,13 @@ class InteractiveReviewTests(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            answers = iter(["doc-1", "r", "y", "not an authoritative source"])
+            answers = iter([
+                "01_admission",
+                "doc-1",
+                "r",
+                "y",
+                "not an authoritative source",
+            ])
             with patch("rag.review._launch_editor", side_effect=edit_markdown):
                 review_documents(
                     paths,
@@ -639,7 +855,7 @@ class InteractiveReviewTests(unittest.TestCase):
                 ) + "\n",
                 encoding="utf-8",
             )
-            answers = iter(["1", "doc-1", "a", "q"])
+            answers = iter(["1", "01_admission", "doc-1", "a", "q", "q"])
             with patch("rag.review._launch_editor"):
                 self.assertEqual(
                     run_review(paths, input_fn=lambda _: next(answers), output_fn=lambda _: None),
@@ -647,7 +863,7 @@ class InteractiveReviewTests(unittest.TestCase):
                 )
             self.assertEqual(get_state("doc-1", paths.state_file), "approved")
             self.assertEqual([record["id"] for _, record in pending_documents(paths)], ["doc-2"])
-            answers = iter(["3", "doc-2", "a"])
+            answers = iter(["4", "01_admission", "doc-2", "a"])
             with patch("rag.review._launch_editor"):
                 self.assertEqual(
                     run_review(paths, input_fn=lambda _: next(answers), output_fn=lambda _: None),
@@ -681,6 +897,7 @@ class InteractiveReviewTests(unittest.TestCase):
                 encoding="utf-8",
             )
             answers = iter([
+                "01_admission",
                 "c1",
                 "e", "Edited text", ".",
                 "c2",
@@ -735,18 +952,23 @@ class InteractiveReviewTests(unittest.TestCase):
             proposal = paths.proposals_dir / "category.jsonl"
             proposal.write_text(
                 "\n".join(
-                    json.dumps({"chunk_id": chunk_id, "document_id": "doc-1", "text": chunk_id})
+                    json.dumps({
+                        "chunk_id": chunk_id,
+                        "document_id": "doc-1",
+                        "category": "01_admission",
+                        "text": chunk_id,
+                    })
                     for chunk_id in ("c1", "c2")
                 ) + "\n",
                 encoding="utf-8",
             )
-            answers = iter(["2", "c1", "a", "q"])
+            answers = iter(["2", "01_admission", "c1", "a", "q", "q"])
             self.assertEqual(
                 run_review(paths, input_fn=lambda _: next(answers), output_fn=lambda _: None),
                 0,
             )
             self.assertEqual([chunk["chunk_id"] for _, chunk in pending_chunks(paths)], ["c2"])
-            answers = iter(["3", "c2", "a"])
+            answers = iter(["4", "01_admission", "c2", "a"])
             self.assertEqual(
                 run_review(paths, input_fn=lambda _: next(answers), output_fn=lambda _: None),
                 0,
