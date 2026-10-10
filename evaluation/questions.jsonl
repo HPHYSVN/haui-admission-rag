@@ -1,0 +1,7 @@
+{"question":"Học bổng mức 1 năm 2026 yêu cầu điều kiện gì?","expected_document_ids":["05_tuition_scholarship_001"],"expected_year":2026,"notes":"Học bổng; strict year and category filtering."}
+{"question":"Điểm chuẩn Kỹ thuật phần mềm năm 2026 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_001"],"expected_year":2026,"notes":"Must not retrieve another year as an answer."}
+{"question":"Các phương thức tuyển sinh đại học chính quy HaUI năm 2026 là gì?","expected_document_ids":["01_admission_004"],"expected_year":2026,"notes":"Admission methods."}
+{"question":"Học phí năm 2026 là bao nhiêu?","expected_document_ids":["05_tuition_scholarship_003"],"expected_year":2026,"notes":"Tuition."}
+{"question":"Ngành kỹ thuật ô tô học những nội dung gì?","expected_document_ids":["04_curriculum_004","07_career_orientation_019"],"notes":"Question without an explicit year."}
+{"question":"Chính sách hoàn tiền vé tàu vũ trụ cho sinh viên là gì?","expected_document_ids":[],"notes":"No relevant corpus answer; sources should be empty."}
+{"question":"Điểm chuẩn HaUI các năm gần đây","expected_document_ids":["03_cutoff_scores_001","03_cutoff_scores_004"],"notes":"Historical query without a single-year constraint."}

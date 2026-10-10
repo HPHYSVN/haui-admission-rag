@@ -11,6 +11,7 @@ from typing import Any
 from rag.config import DEFAULT_VECTOR_INDEX_DIR, embedding_model_name
 
 INDEX_FILE = "vectors.jsonl"
+FAISS_INDEX_FILE = "vectors.faiss"
 METADATA_FILE = "metadata.json"
 
 
@@ -73,6 +74,8 @@ class VectorIndex:
         self.index_dir = index_dir
         self.model_name = model_name or embedding_model_name()
         self.embedder = embedder
+        self._faiss_index: Any | None = None
+        self._faiss_chunk_ids: list[str] = []
 
     def _get_embedder(self) -> LocalEmbedder:
         if self.embedder is None:
@@ -152,6 +155,103 @@ class VectorIndex:
         }
         for document_id in sorted(item for item in changed_documents if isinstance(item, str)):
             self.build(chunks, document_id=document_id)
+        self._ensure_faiss_current(self._load())
+
+    def _faiss_modules(self) -> tuple[Any, Any]:
+        try:
+            import faiss
+            import numpy as np
+        except ImportError as exc:
+            raise RuntimeError(
+                "FAISS semantic search requires faiss-cpu. Run `uv sync` to install project dependencies."
+            ) from exc
+        return faiss, np
+
+    @staticmethod
+    def _normalized_matrix(
+        records: dict[str, dict[str, Any]],
+        np: Any,
+    ) -> tuple[list[str], Any]:
+        chunk_ids = sorted(records)
+        vectors = np.asarray([records[chunk_id]["vector"] for chunk_id in chunk_ids], dtype=np.float32)
+        if vectors.ndim != 2 or vectors.shape[1] == 0:
+            raise ValueError("Embedding index vectors must have a consistent non-empty dimension")
+        if not np.isfinite(vectors).all():
+            raise ValueError("Embedding index contains non-finite values")
+        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+        np.divide(vectors, norms, out=vectors, where=norms != 0)
+        return chunk_ids, vectors
+
+    @staticmethod
+    def _faiss_fingerprint(
+        records: dict[str, dict[str, Any]],
+        chunk_ids: list[str],
+    ) -> str:
+        fingerprint = hashlib.sha256()
+        for chunk_id in chunk_ids:
+            fingerprint.update(chunk_id.encode("utf-8"))
+            fingerprint.update(b"\0")
+            fingerprint.update(records[chunk_id]["content_hash"].encode("ascii"))
+            fingerprint.update(b"\n")
+        return fingerprint.hexdigest()
+
+    def _write_faiss_index(self, records: dict[str, dict[str, Any]]) -> dict[str, Any]:
+        faiss, np = self._faiss_modules()
+        chunk_ids, vectors = self._normalized_matrix(records, np)
+        index = faiss.IndexFlatIP(vectors.shape[1])
+        if len(vectors):
+            index.add(vectors)
+        temporary = self.index_dir / f"{FAISS_INDEX_FILE}.tmp"
+        faiss.write_index(index, str(temporary))
+        temporary.replace(self.index_dir / FAISS_INDEX_FILE)
+        self._faiss_index = index
+        self._faiss_chunk_ids = chunk_ids
+        return {
+            "faiss_fingerprint": self._faiss_fingerprint(records, chunk_ids),
+            "faiss_dimension": int(vectors.shape[1]),
+        }
+
+    def _ensure_faiss_current(self, records: dict[str, dict[str, Any]]) -> None:
+        metadata_path = self.index_dir / METADATA_FILE
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        chunk_ids = sorted(records)
+        dimension = len(records[chunk_ids[0]]["vector"]) if chunk_ids else 0
+        faiss_path = self.index_dir / FAISS_INDEX_FILE
+        if (
+            not faiss_path.exists()
+            or metadata.get("faiss_fingerprint")
+            != self._faiss_fingerprint(records, chunk_ids)
+            or metadata.get("faiss_dimension") != dimension
+        ):
+            faiss_details = self._write_faiss_index(records)
+            metadata.update(faiss_details)
+            temporary = metadata_path.with_suffix(".json.tmp")
+            temporary.write_text(
+                json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            temporary.replace(metadata_path)
+            return
+
+        if (
+            self._faiss_index is not None
+            and self._faiss_chunk_ids == chunk_ids
+        ):
+            return
+        faiss, _ = self._faiss_modules()
+        try:
+            index = faiss.read_index(str(faiss_path))
+        except RuntimeError as exc:
+            raise ValueError(
+                f"Cannot read FAISS index {faiss_path}; rebuild it with `uv run python -m rag.cli index --all`."
+            ) from exc
+        if index.ntotal != len(chunk_ids) or index.d != dimension:
+            raise ValueError(
+                f"FAISS index {faiss_path} does not match its metadata; "
+                "rebuild it with `uv run python -m rag.cli index --all`."
+            )
+        self._faiss_index = index
+        self._faiss_chunk_ids = chunk_ids
 
     def build(self, chunks: list[dict[str, Any]], document_id: str | None = None) -> int:
         if not chunks:
@@ -202,10 +302,15 @@ class VectorIndex:
             for chunk_id in sorted(existing):
                 output.write(json.dumps(existing[chunk_id], ensure_ascii=False, sort_keys=True) + "\n")
         temp_path.replace(self.vectors_path)
+        faiss_details = self._write_faiss_index(existing)
         metadata_temp = metadata_path.with_suffix(".json.tmp")
         metadata_temp.write_text(
             json.dumps(
-                {"model": self.model_name, "chunk_count": len(existing)},
+                {
+                    "model": self.model_name,
+                    "chunk_count": len(existing),
+                    **faiss_details,
+                },
                 ensure_ascii=False,
                 indent=2,
                 sort_keys=True,
@@ -228,27 +333,41 @@ class VectorIndex:
             raise ValueError("top_k must be at least 1")
         self.ensure_current(chunks)
         records = self._load()
+        self._ensure_faiss_current(records)
         query_vector = self._get_embedder().embed([query])[0]
-        norm = sum(value * value for value in query_vector) ** 0.5
+        _, np = self._faiss_modules()
+        query_matrix = np.asarray([query_vector], dtype=np.float32)
+        if query_matrix.shape[1] != self._faiss_index.d:
+            raise ValueError(
+                "Query embedding dimension does not match the FAISS index; "
+                "check RAG_EMBEDDING_MODEL or rebuild all embeddings."
+            )
+        if not np.isfinite(query_matrix).all():
+            raise ValueError("Query embedding contains non-finite values")
+        norm = float(np.linalg.norm(query_matrix))
         if norm == 0:
             return []
-        query_vector = [value / norm for value in query_vector]
-
+        query_matrix /= norm
         chunks_by_id = {chunk["chunk_id"]: chunk for chunk in chunks}
-        scored: list[tuple[float, dict[str, Any]]] = []
-        for chunk_id, record in records.items():
-            chunk = chunks_by_id.get(chunk_id)
-            if chunk is None or (document_ids is not None and chunk.get("document_id") not in document_ids):
+        available = len(self._faiss_chunk_ids)
+        if available == 0:
+            return []
+        search_count = (
+            available
+            if len(chunks_by_id) < available or document_ids is not None
+            else min(top_k, available)
+        )
+        scores, positions = self._faiss_index.search(query_matrix, search_count)
+        scored = []
+        for score, position in zip(scores[0], positions[0]):
+            if position < 0:
                 continue
-            vector = record["vector"]
-            if len(vector) != len(query_vector):
-                raise ValueError(f"Embedding dimension mismatch for chunk {chunk_id!r}")
-            vector_norm = sum(value * value for value in vector) ** 0.5
-            score = (
-                sum(left * right for left, right in zip(query_vector, vector)) / vector_norm
-                if vector_norm
-                else 0.0
-            )
+            chunk_id = self._faiss_chunk_ids[int(position)]
+            chunk = chunks_by_id.get(chunk_id)
+            if chunk is None or (
+                document_ids is not None and chunk.get("document_id") not in document_ids
+            ):
+                continue
             scored.append((float(score), chunk))
         scored.sort(key=lambda item: (-item[0], item[1].get("chunk_id", "")))
         return scored[:top_k]

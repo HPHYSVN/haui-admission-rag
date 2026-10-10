@@ -1,0 +1,442 @@
+{
+  "01_admission_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.057876+00:00"
+  },
+  "01_admission_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.066066+00:00"
+  },
+  "01_admission_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.075511+00:00"
+  },
+  "01_admission_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.065451+00:00"
+  },
+  "01_admission_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.071890+00:00"
+  },
+  "01_admission_006": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.069090+00:00"
+  },
+  "01_admission_007": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.071585+00:00"
+  },
+  "01_admission_008": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.072484+00:00"
+  },
+  "01_admission_009": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.064207+00:00"
+  },
+  "01_admission_010": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.078094+00:00"
+  },
+  "01_admission_011": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.078393+00:00"
+  },
+  "01_admission_012": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.076444+00:00"
+  },
+  "02_ministry_regulations_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.074614+00:00"
+  },
+  "02_ministry_regulations_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.061707+00:00"
+  },
+  "02_ministry_regulations_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.071281+00:00"
+  },
+  "03_cutoff_scores_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.079579+00:00"
+  },
+  "03_cutoff_scores_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.065163+00:00"
+  },
+  "03_cutoff_scores_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.059502+00:00"
+  },
+  "03_cutoff_scores_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.083292+00:00"
+  },
+  "03_cutoff_scores_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.073106+00:00"
+  },
+  "03_cutoff_scores_006": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.067880+00:00"
+  },
+  "03_cutoff_scores_007": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.061099+00:00"
+  },
+  "03_cutoff_scores_008": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.073738+00:00"
+  },
+  "03_cutoff_scores_009": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.062585+00:00"
+  },
+  "04_curriculum_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.068177+00:00"
+  },
+  "04_curriculum_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.082068+00:00"
+  },
+  "04_curriculum_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.078996+00:00"
+  },
+  "04_curriculum_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.080196+00:00"
+  },
+  "04_curriculum_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.062886+00:00"
+  },
+  "04_curriculum_006": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.069382+00:00"
+  },
+  "04_curriculum_007": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.060798+00:00"
+  },
+  "04_curriculum_008": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.081714+00:00"
+  },
+  "04_curriculum_009": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.072786+00:00"
+  },
+  "04_curriculum_010": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.064866+00:00"
+  },
+  "05_tuition_scholarship_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.066673+00:00"
+  },
+  "05_tuition_scholarship_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.059180+00:00"
+  },
+  "05_tuition_scholarship_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.067288+00:00"
+  },
+  "05_tuition_scholarship_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.067576+00:00"
+  },
+  "06_career_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.063175+00:00"
+  },
+  "06_career_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.060433+00:00"
+  },
+  "06_career_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.068481+00:00"
+  },
+  "06_career_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.078696+00:00"
+  },
+  "06_career_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.080508+00:00"
+  },
+  "07_career_orientation_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.077101+00:00"
+  },
+  "07_career_orientation_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.068785+00:00"
+  },
+  "07_career_orientation_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.073421+00:00"
+  },
+  "07_career_orientation_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.082993+00:00"
+  },
+  "07_career_orientation_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.082669+00:00"
+  },
+  "07_career_orientation_006": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.062296+00:00"
+  },
+  "07_career_orientation_007": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.056581+00:00"
+  },
+  "07_career_orientation_008": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.061396+00:00"
+  },
+  "07_career_orientation_009": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.080816+00:00"
+  },
+  "07_career_orientation_010": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.074038+00:00"
+  },
+  "07_career_orientation_011": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.056053+00:00"
+  },
+  "07_career_orientation_012": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.065740+00:00"
+  },
+  "07_career_orientation_013": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.058861+00:00"
+  },
+  "07_career_orientation_014": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.066992+00:00"
+  },
+  "07_career_orientation_015": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.059830+00:00"
+  },
+  "07_career_orientation_016": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.063589+00:00"
+  },
+  "07_career_orientation_017": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.083613+00:00"
+  },
+  "07_career_orientation_018": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.077784+00:00"
+  },
+  "07_career_orientation_019": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.069673+00:00"
+  },
+  "07_career_orientation_020": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.084199+00:00"
+  },
+  "07_career_orientation_021": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.074917+00:00"
+  },
+  "07_career_orientation_022": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.066375+00:00"
+  },
+  "08_enrollment_procedure_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.079285+00:00"
+  },
+  "08_enrollment_procedure_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.076151+00:00"
+  },
+  "08_enrollment_procedure_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.076809+00:00"
+  },
+  "09_training_regulations_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.058215+00:00"
+  },
+  "09_training_regulations_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.079880+00:00"
+  },
+  "09_training_regulations_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.072190+00:00"
+  },
+  "10_dormitory_housing_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.075218+00:00"
+  },
+  "10_dormitory_housing_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.075846+00:00"
+  },
+  "10_dormitory_housing_005": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.069969+00:00"
+  },
+  "10_dormitory_housing_009": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.070942+00:00"
+  },
+  "10_dormitory_housing_010": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.077394+00:00"
+  },
+  "10_dormitory_housing_012": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.081112+00:00"
+  },
+  "11_student_life_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.081412+00:00"
+  },
+  "11_student_life_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.062006+00:00"
+  },
+  "12_student_support_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.064561+00:00"
+  },
+  "12_student_support_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.074328+00:00"
+  },
+  "12_student_support_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.058537+00:00"
+  },
+  "13_training_systems_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.063910+00:00"
+  },
+  "13_training_systems_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.070623+00:00"
+  },
+  "14_about_haui_001": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.060136+00:00"
+  },
+  "14_about_haui_002": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.083919+00:00"
+  },
+  "14_about_haui_003": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.082366+00:00"
+  },
+  "14_about_haui_004": {
+    "note": "",
+    "status": "indexed",
+    "updated_at": "2026-10-10T14:13:34.070251+00:00"
+  }
+}

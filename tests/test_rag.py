@@ -7,6 +7,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import requests
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -18,7 +20,7 @@ from rag.chunk_review import finalize_chunks, review_chunks
 from rag.document_workflow import get_state, review_document, set_state
 from rag.embeddings import VectorIndex
 from rag.filters import matching_documents, query_filters, query_term_coverage
-from rag.pipeline import RAGPipeline, VLLMChatClient, create_messages, load_chunks
+from rag.pipeline import RAGPipeline, RAGResponse, VLLMChatClient, create_messages, load_chunks
 from rag.review import (
     ReviewPaths,
     pending_chunks,
@@ -66,6 +68,72 @@ class PromptTests(unittest.TestCase):
         self.assertIn("chunk_id: chunk-1", messages[1]["content"])
         self.assertIn("source_url: https://example.org", messages[1]["content"])
         self.assertNotIn("[Nguồn 1]", messages[0]["content"])
+
+    def test_create_messages_places_chat_history_before_current_question(self) -> None:
+        history = [
+            {"role": "user", "content": "Tuyển sinh năm 2026 có những phương thức nào?"},
+            {"role": "assistant", "content": "Có các phương thức trong tài liệu."},
+        ]
+        messages = create_messages("Còn học bạ thì sao?", [], history)
+        self.assertEqual(messages[1:3], history)
+        self.assertTrue(messages[3]["content"].endswith("CÂU HỎI:\nCòn học bạ thì sao?"))
+
+    def test_create_messages_caps_context_for_8k_model(self) -> None:
+        chunk = {
+            "chunk_id": "chunk-1",
+            "document_id": "doc-1",
+            "title": "Tài liệu",
+            "source_url": "https://example.org",
+            "text": "nội dung " * 5000,
+        }
+        messages = create_messages("Câu hỏi", [(1.0, chunk)] * 5)
+        self.assertLess(sum(len(message["content"]) for message in messages), 18000)
+        self.assertIn("[...đã cắt theo ngân sách context]", messages[-1]["content"])
+
+    def test_prompt_requires_scope_and_year_grounding(self) -> None:
+        messages = create_messages("Trường khác tuyển sinh thế nào?", [])
+        system = messages[0]["content"]
+        self.assertIn("chỉ hỗ trợ thông tin tuyển sinh HaUI", system)
+        self.assertIn("chỉ dùng dữ kiện đúng năm đó", system)
+
+    def test_chat_loop_keeps_recent_context_and_clear_resets_it(self) -> None:
+        from rag.cli import _chat_loop
+
+        pipeline = Mock()
+        pipeline.ask.side_effect = [
+            RAGResponse("Câu trả lời một", [], []),
+            RAGResponse("Câu trả lời hai", [], []),
+            RAGResponse("Câu trả lời mới", [], []),
+        ]
+        answers = iter([
+            "Phương thức tuyển sinh năm 2026?",
+            "Còn học bạ thì sao?",
+            "/clear",
+            "Học phí năm 2026?",
+            "/quit",
+        ])
+        output: list[str] = []
+
+        self.assertEqual(
+            _chat_loop(
+                pipeline,
+                top_k=3,
+                show_context=False,
+                input_fn=lambda _: next(answers),
+                output_fn=output.append,
+            ),
+            0,
+        )
+        self.assertEqual(pipeline.ask.call_args_list[0].kwargs["history"], [])
+        self.assertEqual(
+            pipeline.ask.call_args_list[1].kwargs["history"],
+            [
+                {"role": "user", "content": "Phương thức tuyển sinh năm 2026?"},
+                {"role": "assistant", "content": "Câu trả lời một"},
+            ],
+        )
+        self.assertEqual(pipeline.ask.call_args_list[2].kwargs["history"], [])
+        self.assertTrue(any("Đã xóa hội thoại." in line for line in output))
 
     def test_no_relevant_retrieval_skips_generation_and_returns_no_sources(self) -> None:
         client = Mock()
@@ -232,8 +300,78 @@ class VectorIndexTests(unittest.TestCase):
             self.assertEqual(index.build(chunks), 2)
             results = index.search("học bổng", chunks, top_k=1)
             self.assertEqual(results[0][1]["chunk_id"], "scholarship-1")
+            self.assertEqual((Path(temporary) / "vectors.faiss").exists(), True)
             self.assertEqual(index.build(chunks, document_id="fees"), 1)
             self.assertEqual(index.search("học phí", chunks, top_k=1)[0][1]["chunk_id"], "fees-1")
+
+    def test_faiss_flat_search_preserves_exact_cosine_ranking(self) -> None:
+        class FakeEmbedder:
+            def embed(self, texts):
+                vectors = {
+                    "A\nalpha": [3.0, 0.0],
+                    "B\nbeta": [0.0, 2.0],
+                    "C\nalpha beta": [1.0, 1.0],
+                    "query": [1.0, 0.0],
+                }
+                return [vectors[text] for text in texts]
+
+        chunks = [
+            {"chunk_id": chunk_id, "document_id": chunk_id, "title": title, "text": text}
+            for chunk_id, title, text in (
+                ("a", "A", "alpha"),
+                ("b", "B", "beta"),
+                ("c", "C", "alpha beta"),
+            )
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            index = VectorIndex(Path(temporary), model_name="fake-model", embedder=FakeEmbedder())
+            index.build(chunks)
+            results = index.search("query", chunks, top_k=3)
+            self.assertEqual(
+                [chunk["chunk_id"] for _, chunk in results],
+                ["a", "c", "b"],
+            )
+            self.assertAlmostEqual(results[0][0], 1.0, places=6)
+            self.assertAlmostEqual(results[1][0], 2**-0.5, places=6)
+            reopened = VectorIndex(
+                Path(temporary),
+                model_name="fake-model",
+                embedder=FakeEmbedder(),
+            )
+            self.assertEqual(
+                [chunk["chunk_id"] for _, chunk in reopened.search("query", chunks, 3)],
+                ["a", "c", "b"],
+            )
+
+    def test_legacy_vector_jsonl_builds_faiss_without_reembedding_chunks(self) -> None:
+        class FakeEmbedder:
+            def __init__(self):
+                self.calls = []
+
+            def embed(self, texts):
+                self.calls.append(texts)
+                return [[1.0, 0.0] for _ in texts]
+
+        chunks = [{"chunk_id": "c1", "document_id": "d1", "title": "Title", "text": "Text"}]
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            first_embedder = FakeEmbedder()
+            VectorIndex(directory, model_name="fake-model", embedder=first_embedder).build(chunks)
+            (directory / "vectors.faiss").unlink()
+            (directory / "metadata.json").write_text(
+                json.dumps({"model": "fake-model", "chunk_count": 1}),
+                encoding="utf-8",
+            )
+
+            upgraded_embedder = FakeEmbedder()
+            upgraded = VectorIndex(
+                directory,
+                model_name="fake-model",
+                embedder=upgraded_embedder,
+            )
+            self.assertEqual(upgraded.search("query", chunks, top_k=1)[0][1]["chunk_id"], "c1")
+            self.assertTrue((directory / "vectors.faiss").exists())
+            self.assertEqual(upgraded_embedder.calls, [["query"]])
 
     def test_changed_final_text_reembeds_only_its_document(self) -> None:
         class FakeEmbedder:
@@ -1125,7 +1263,20 @@ class VLLMTests(unittest.TestCase):
         answer = client.answer("question", [])
         self.assertEqual(answer, "Trả lời có nguồn")
         self.assertEqual(post.call_args.args[0], "http://localhost:8000/v1/chat/completions")
+        self.assertEqual(post.call_args.kwargs["json"]["max_tokens"], 800)
 
+    @patch("rag.pipeline.requests.post")
+    def test_reports_vllm_http_error_details(self, post: Mock) -> None:
+        response = Mock(status_code=400, text='{"error":"context length exceeded"}')
+        response.raise_for_status.side_effect = requests.HTTPError(
+            "400 Client Error",
+            response=response,
+        )
+        post.return_value = response
+        client = VLLMChatClient(model="served-model")
+
+        with self.assertRaisesRegex(RuntimeError, "context length exceeded"):
+            client.answer("question", [])
 
 if __name__ == "__main__":
     unittest.main()

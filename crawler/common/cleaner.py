@@ -29,16 +29,16 @@ DOC_NUMBER_PATTERNS = [
 
 
 def clean_text(text: str) -> str:
-    """Cleans raw text: unescape html, normalize unicode, strip excessive whitespace."""
+    """Cleans text while preserving meaningful paragraph boundaries."""
     if not text:
         return ""
     text = html.unescape(text)
     text = unicodedata.normalize("NFC", text)
     text = text.replace("\xa0", " ")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
-    # Replace horizontal tabs and multiple spaces
+    text = re.sub(r"[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]", "", text)
     text = re.sub(r"[ \t]+", " ", text)
-    # Collapse 3+ newlines to 2
+    text = re.sub(r"[ \t]*\n[ \t]*", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 

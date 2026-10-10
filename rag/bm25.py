@@ -172,7 +172,7 @@ class HybridRetriever:
             score = self.alpha * semantic_score + (1 - self.alpha) * normalized_bm25
             coverage = query_term_coverage(query, chunk)
             if score >= self.score_threshold and (
-                coverage >= self.min_term_coverage or semantic_score >= 0.78
+                coverage >= self.min_term_coverage
             ):
                 fused.append((score, chunk))
         fused.sort(key=lambda item: (-item[0], item[1].get("chunk_id", "")))
