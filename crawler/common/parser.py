@@ -149,7 +149,7 @@ def parse_html_document(raw_html: bytes) -> tuple[str, str]:
         # Skip divs that contain other block elements to avoid duplicate nested text
         if elem.name == "div" and elem.find(["p", "div", "h1", "h2", "h3", "h4", "h5", "ul", "ol"]):
             continue
-        text = clean_text(elem.get_text())
+        text = clean_text(elem.get_text("\n"))
         if not text:
             continue
 

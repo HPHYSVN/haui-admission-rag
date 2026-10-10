@@ -3,35 +3,136 @@
 The RAG code stays in Python modules and scripts; notebooks are optional
 experiments, never the production pipeline.
 
-## Architecture
+## Three end-to-end diagrams
 
+These diagrams distinguish the human data-preparation/evaluation loop, the
+implemented CLI pipeline, and a possible later backend/frontend architecture.
+The third diagram is a target design, not functionality that exists today.
+
+### 1. Corpus preparation and evaluation feedback loop
+
+<!-- mermaid-checked: no \n, no em-dash/en-dash, no {} in labels, subgraphs are id["label"], arrows are -->|"label"|, all subgraphs closed by end, ids unique -->
 ```mermaid
 flowchart TD
-  subgraph Offline["Offline preparation"]
-    D["Cleaned documents JSONL"] --> R["Render Markdown per document"]
-    R --> A["Human review and approval"]
-    A --> P["Structure-aware chunk proposals"]
-    P --> CR["Chunk review: approve, edit, split, merge, reject"]
-    CR --> F["Final chunks JSONL"]
-    F --> B["BM25 lexical index"]
-    F --> E["Local multilingual embeddings"]
-  end
-  subgraph Online["Question answering"]
-    Q["Question"] --> M["Year/category candidate filters"]
-    M --> H["Hybrid BM25 + cosine retrieval"]
-    B --> H
-    E --> H
-    H --> G["Relevance threshold"]
-    G --> C["Context with provenance"]
-    C --> L["vLLM answer"]
-    L --> O["Answer + backend-built source objects"]
-  end
+    subgraph Prepare["Prepare corpus"]
+        wfRaw["Raw web pages and files"] --> wfCollect["Crawl or import source"]
+        wfCollect --> wfExtract["Extract text and metadata"]
+        wfExtract --> wfNormalize["Normalize and deduplicate"]
+        wfNormalize --> wfValidate["Validate JSONL schema"]
+        wfValidate --> wfReviewDoc["Human document review"]
+        wfReviewDoc --> wfChunk["Structure-aware chunk proposals"]
+        wfChunk --> wfReviewChunk["Approve edit split merge or reject"]
+        wfReviewChunk --> wfFinal["Final approved chunks"]
+        wfFinal --> wfIndexBuild["Load BM25 stats and build FAISS index"]
+    end
+    subgraph EvaluateLoop["Evaluate and improve"]
+        wfIndexBuild --> wfRun["Run retrieval evaluation"]
+        wfQuestions["Curated question and expected source set"] --> wfRun
+        wfRun --> wfMetrics["Inspect Recall at K and failure cases"]
+        wfMetrics --> wfChoose["Choose chunk or retrieval change"]
+        wfChoose --> wfChunk
+        wfChoose --> wfRetrieveConfig["Tune filters fusion threshold or top K"]
+        wfRetrieveConfig --> wfRun
+    end
 ```
 
 `data/documents/*.jsonl` remains the machine-readable source of truth. Review
-Markdown is an editing surface for the document's `content`; document workflow
-state is stored separately in `data/workflow/documents.json`. Chunk proposals
-and review decisions are also separate from source documents.
+Markdown edits document content; workflow state, chunk proposals, reviewer
+decisions and final chunks are stored separately. Evaluation cases live in
+`evaluation/questions.jsonl`; expected document/chunk IDs make misses
+actionable and allow the same suite to compare chunking and retrieval changes.
+
+### 2. Current retrieval and answer flow
+
+<!-- mermaid-checked: no \n, no em-dash/en-dash, no {} in labels, subgraphs are id["label"], arrows are -->|"label"|, all subgraphs closed by end, ids unique -->
+```mermaid
+flowchart TD
+    subgraph CurrentCli["Python CLI"]
+        nowQuestion["Question from CLI chat or query"] --> nowFilters["Strict year and category filters"]
+        nowFilters --> nowCandidates["Eligible final chunk IDs"]
+        nowBM25 --> nowLexGate["Keep lexical scores for eligible IDs"]
+        nowCandidates --> nowLexGate
+        nowLexGate --> nowFuse["Weighted score fusion"]
+        nowCandidates --> nowDenseGate["Keep dense scores for eligible IDs"]
+        nowDenseGate --> nowFuse
+        nowBM25["BM25 lexical scores over loaded chunks"]
+        nowQuestion --> nowBM25
+        nowQuestion --> nowFaiss["FAISS IndexFlatIP cosine scores"]
+        nowFaiss --> nowDenseGate
+        nowFuse --> nowGate["Score threshold and term coverage gate"]
+        nowGate --> nowTop["Top K chunks with provenance"]
+        nowTop --> nowPrompt["Context and question prompt"]
+        nowPrompt --> nowServer
+        nowServer --> nowAnswer["Answer with backend-built sources"]
+    end
+    subgraph CurrentStores["Local files and model"]
+        nowFinal[("Final chunk JSONL")]
+        nowVectors[("Vectors JSONL and FAISS index")]
+        nowModel["Local multilingual embedding model"]
+    end
+    subgraph CurrentExternal["Model endpoint"]
+        nowServer["Configured vLLM endpoint"]
+    end
+    nowFinal --> nowCandidates
+    nowVectors --> nowFaiss
+    nowModel --> nowFaiss
+```
+
+The CLI loads final chunks and derives eligible IDs from explicit year/category
+filters. Today BM25 scores the loaded chunks and the hybrid retriever filters
+those results to eligible IDs; FAISS also does exact dense search before its
+results are restricted to those IDs. It fuses the surviving scores, applies
+relevance gates, and passes selected chunks to vLLM. Sources are constructed
+from retrieved chunks, not generated by the model.
+
+### 3. Possible future optimized backend and frontend
+
+<!-- mermaid-checked: no \n, no em-dash/en-dash, no {} in labels, subgraphs are id["label"], arrows are -->|"label"|, all subgraphs closed by end, ids unique -->
+```mermaid
+flowchart LR
+    subgraph FutureUi["Frontend"]
+        futUser["Student or staff"] --> futChat["Chat UI and conversation state"]
+        futChat --> futApi["Backend API"]
+        futReviewUi["Corpus review and evaluation UI"] --> futAdminApi["Admin API"]
+    end
+    subgraph FutureBackend["Backend RAG services"]
+        futApi --> futGuard["Input validation and session policy"]
+        futGuard --> futRewrite["Query rewrite and multi query"]
+        futRewrite --> futRoute["Intent and metadata filters"]
+        futRoute --> futLex["BM25 candidate search"]
+        futRoute --> futDense["FAISS dense candidate search"]
+        futLex --> futFuse["Reciprocal rank fusion"]
+        futDense --> futFuse
+        futFuse --> futRerank["Cross encoder reranker"]
+        futRerank --> futGate["Calibrated relevance and abstention"]
+        futGate --> futPack["Context packing and provenance"]
+        futPack --> futGenerate["LLM answer generation"]
+        futGenerate --> futVerify["Citation and answer checks"]
+        futVerify --> futResponse["Stream answer and sources"]
+        futResponse --> futChat
+        futAdminApi --> futIngest["Ingestion and review pipeline"]
+        futIngest --> futCorpus["Versioned corpus and chunk store"]
+        futCorpus --> futIndex["BM25 and FAISS index build"]
+        futIndex --> futLex
+        futIndex --> futDense
+        futReviewUi --> futEval["Evaluation and regression dashboard"]
+        futEval --> futCorpus
+        futEval --> futRoute
+    end
+    subgraph FutureExternal["External model services"]
+        futEmbedModel["Embedding model"]
+        futRerankModel["Reranker model"]
+        futLlmModel["LLM service"]
+    end
+    futDense --> futEmbedModel
+    futRerank --> futRerankModel
+    futGenerate --> futLlmModel
+```
+
+This target adds a frontend, API/session boundaries, rewrite and multi-query,
+rank fusion, reranking, calibrated abstention, citation checks, streaming, and
+an evaluation/review dashboard. Each addition should be gated by measurable
+improvement on the curated test set, latency budgets, and answer-quality review.
 
 ## Setup
 
@@ -44,7 +145,11 @@ The first semantic query downloads the configured multilingual embedding model
 to the local Hugging Face cache. Model weights and generated vector indexes are
 not committed. Configure `RAG_EMBEDDING_MODEL` only with a model supported by
 FastEmbed. vLLM chat settings are `VLLM_BASE_URL`, `VLLM_MODEL`, and optionally
-`VLLM_API_KEY`.
+`VLLM_API_KEY`. The prompt packer keeps retrieved context under a conservative
+15,000-character budget and bounds recent history before sending the request.
+This leaves room for the configured 800-token output in the model's 8K window;
+long chunks are explicitly marked as truncated rather than silently exceeding
+the limit.
 
 ## Review one document independently
 
@@ -125,9 +230,30 @@ uv run python -m rag.cli chunk --document 05_tuition_scholarship_001
 Proposals are written to `data/chunks/proposals/<category>.jsonl`. They carry
 document/source IDs, title, URL, category, year, heading path, source position,
 content type, optional structured content, text, review status, and override
-fields. The chunker groups structural blocks and only falls back to sentence
-boundaries for long paragraphs; long tables and indivisible sentences are kept
-intact rather than cut at an arbitrary character boundary.
+fields. The chunker groups heading sections and paragraphs, combines them up to
+about 2,800 characters, and only falls back to sentence boundaries for an
+oversized paragraph. It does not currently add overlap (`overlap_chars` is
+ignored), and long tables or indivisible sentences are kept intact rather than
+cut at an arbitrary character boundary.
+
+This is structure-aware, deterministic chunking; it is **not** semantic or
+recursive chunking. A recursive splitter does not inherently understand
+meaning: it tries separators in order (for example heading, paragraph, line,
+sentence, then word) until pieces fit a configured size, then packs adjacent
+pieces back together. To try one, preserve heading metadata, use a tokenizer
+budget rather than a character count, keep tables/lists intact, and test a
+small overlap. A semantic splitter instead embeds adjacent sentences and
+starts a new chunk when their similarity drops below a boundary threshold. It
+can follow topic changes better, but needs threshold calibration and human
+review; it can split a legal condition that is worded differently but still
+logically connected.
+
+For this corpus, first improve chunks manually with the existing `split`,
+`merge`, and `edit` review actions. Then regenerate proposals for the document,
+review and finalize them, and compare the same evaluation questions before
+changing the production chunker. Record expected chunk IDs where possible.
+Later, a recursive splitter can be added as an explicit strategy and compared
+against the current strategy; avoid replacing the source or skipping review.
 
 Inspect the proposal file, then decide each proposal. An edit is stored in
 `text_override`; it does not rewrite the source document:
@@ -199,17 +325,117 @@ chunks ineligible for retrieval until new chunks are finalized.
 
 ## Index and retrieve
 
-BM25 is computed in memory from final chunks; semantic vectors use the configured local
-multilingual sentence-embedding model. The hybrid score is:
+The current query path has these stages:
+
+1. Reject an empty question and apply strict metadata filters. If a year or
+   category is inferred but no chunk matches it, return no results.
+2. Score eligible chunks with BM25 and a multilingual embedding model.
+3. Fuse lexical and semantic scores, then apply a score threshold and lexical
+   term-coverage gate.
+4. Sort survivors and return at most `top_k` chunks (default 5).
+5. Put those chunks, with title/year/category/URL/heading provenance, into the
+   vLLM prompt. The backend formats source metadata from the retrieved chunks.
+
+### What the relevance threshold means
+
+The default `RAG_SCORE_THRESHOLD=0.08` is a **minimum fused retrieval score**,
+not a probability, model confidence, or guarantee that an answer is correct.
+The fused score is:
 
 ```text
 score = alpha * cosine_similarity + (1 - alpha) * (BM25 / max_BM25_for_query)
 ```
 
-`RAG_ALPHA`, `RAG_SCORE_THRESHOLD`, and `RAG_MIN_TERM_COVERAGE` (default `0.3`) control fusion
-and relevance filtering. An explicit year is a strict filter: if no final
-chunk has that year, retrieval returns no sources instead of silently using a
-nearby year. Common query phrases can also constrain category.
+With the default `RAG_ALPHA=0.5`, each component has equal weight. BM25 is
+normalized relative to the best lexical match for this question; the embedding
+component is cosine similarity (negative values are clamped to zero in fusion).
+A result must meet the fused threshold **and** have at least
+`RAG_MIN_TERM_COVERAGE=0.3`. Coverage measures how much of the query's
+meaningful vocabulary appears in the candidate text/title/heading. Semantic
+similarity alone cannot bypass this lexical-evidence gate, which prevents
+unrelated out-of-scope questions from reaching generation. Raising the
+score/coverage thresholds tends to reduce irrelevant matches but can hide valid
+evidence (lower recall); lowering them can return more weak matches. Tune on
+the same labeled test questions, not by choosing a number that merely looks
+intuitive.
+
+An explicit year is a strict filter, not a preference: the system will not use
+a nearby year as a fallback. Category hints work similarly when recognized.
+
+### BM25 and embedding search
+
+**BM25** is a lexical ranking function. This project case-folds query and chunk
+text into word tokens and adjacent-word bigrams; its chunk text includes title,
+section path, and content. For each query term, BM25 rewards its frequency in
+a chunk and its rarity across the corpus, while normalizing for chunk length.
+The implementation uses `k1=1.5`, `b=0.75`. It is good at exact names, program
+codes, years, and distinctive words, but usually misses paraphrases and
+synonyms. In simplified form, term contribution is
+`IDF * tf * (k1 + 1) / (tf + k1 * (1 - b + b * chunk_length / average_length))`;
+IDF grows when a term appears in fewer chunks.
+
+**The embedding model** maps the title, heading path, and chunk text to a
+numeric vector. Similar meanings can be close even when they do not share exact
+words. The configured default is
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. We compare
+vectors with cosine similarity, which measures their angle rather than raw
+length. It helps with paraphrases, but can confuse topics that are broadly
+related; that is why lexical scores, metadata filters, and coverage remain
+useful.
+
+**FAISS is now used for dense lookup.** The CPU `IndexFlatIP` index stores
+float32, L2-normalized embedding vectors and searches them with inner product;
+for normalized vectors, inner product equals cosine similarity. `IndexFlatIP`
+is an exact flat index: it compares against every indexed vector, so it does
+not intentionally approximate away neighbors or change the retrieval metric.
+Its C++/vectorized implementation can reduce Python scoring overhead, though
+it remains O(number of vectors times vector dimension); it may not be faster
+end-to-end for this currently small corpus because model inference and disk I/O
+can dominate. IVF/HNSW can reduce search work for much larger corpora, but
+approximate candidates may affect recall and must be evaluated. FAISS stores
+float32 values, so floating-point rounding can still reorder nearly tied
+scores; compare the labeled evaluation set rather than assuming byte-for-byte
+identical rankings.
+
+The source vectors remain in `data/indexes/vector/vectors.jsonl`; FAISS's
+binary index and its metadata are stored next to them. These are generated,
+ignored files and can be rebuilt from finalized chunks. Changed chunk text
+causes that document's vectors to be refreshed. Existing vector indexes created
+before the FAISS change are upgraded from their saved vectors on the next query
+or index build.
+
+After pulling this change, install the new dependency and optionally prebuild
+the dense index:
+
+```bash
+uv sync
+uv run python -m rag.cli index --all
+```
+
+The first query also upgrades an existing JSONL-only vector index automatically.
+Only changed chunks need new embeddings, while the exact flat FAISS index file
+is regenerated from the saved vectors to keep its chunk-ID mapping consistent.
+
+### How to optimize retrieval safely
+
+1. Grow `evaluation/questions.jsonl` with real user questions, expected source
+   documents/chunks, strict-year cases, follow-ups, and questions that have no
+   answer. Current evaluation reports hit-rate/Recall@K; also track MRR or
+   nDCG, no-answer false positives, p50/p95 latency, and human answer quality
+   before calling a change better.
+2. Diagnose failures by stage: wrong year/category candidate set, relevant
+   chunk absent, relevant chunk ranked too low, threshold rejection, or
+   answer-generation mistake. Fix the stage that caused the miss.
+3. Compare chunk size/structure and overlap first when relevant evidence is
+   missing or split. Compare BM25-only, dense-only, and hybrid retrieval;
+   tune `RAG_ALPHA`, `RAG_SCORE_THRESHOLD`, coverage, and `top_k` on the same
+   held-out questions.
+4. Consider query rewriting or multi-query for ambiguous follow-ups only when
+   evaluation shows a problem. Later, add a reranker over a small candidate
+   set, then measure its quality gain against added latency. Preserve the
+   original question and provenance for citations.
+5. Change one variable at a time, keep a baseline, and avoid tuning on the
+   final test cases used to claim quality.
 
 Build or update the local persistent vector index:
 
@@ -235,11 +461,25 @@ uv run python -m rag.cli --query \
 The old `--query` invocation remains supported. The supported subcommand form
 is `uv run python -m rag.cli query --query "..." --show-context`.
 
+Start a direct interactive chat session:
+
+```bash
+uv run python -m rag.cli chat
+```
+
+Ask follow-up questions at the `Bạn:` prompt; recent turns are included so the
+assistant can understand references to the preceding conversation. Type
+`/clear` to start a fresh conversation or `/quit` (also `/exit`) to leave. The
+older `uv run python -m rag.cli` invocation without `--query` still starts the
+same interactive chat. Add `--show-context` to print retrieved chunks for
+debugging.
+
 Generation receives provenance-labelled context and is told not to invent
-facts, use another year's data as the answer, or generate citation numbers. The
-backend constructs `sources` from retrieved chunks (`source_id`, `chunk_id`,
-title, URL, year, category, score). When the relevance filter rejects all
-candidates, generation is skipped and `sources` is empty.
+facts, use another year's data as the answer, switch an outside institution to
+HaUI, or generate citation numbers. The backend constructs `sources` from
+retrieved chunks (`source_id`, `chunk_id`, title, URL, year, category, score).
+When the relevance filter rejects all candidates, generation is skipped and
+`sources` is empty.
 
 ## Evaluation and extension
 
@@ -260,5 +500,5 @@ cutoff-score questions, scholarship, tuition, admission methods, a no-match
 query, and a query without an explicit year. Add validated final chunks for a
 document before expecting it to appear in retrieval.
 
-No vector database server, LLM reranker, agentic retrieval, or FE rendering is
-part of this baseline.
+No external vector database server, reranker, query rewriting, agentic
+retrieval, or FE rendering is part of the current baseline.

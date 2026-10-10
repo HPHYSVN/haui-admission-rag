@@ -13,10 +13,13 @@ DEFAULT_PROPOSALS_DIR = ROOT_DIR / "data" / "chunks" / "proposals"
 DEFAULT_VECTOR_INDEX_DIR = ROOT_DIR / "data" / "indexes" / "vector"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-DEFAULT_TOP_K = 5
+DEFAULT_TOP_K = 4
 DEFAULT_ALPHA = 0.5
 DEFAULT_SCORE_THRESHOLD = 0.08
 DEFAULT_MIN_TERM_COVERAGE = 0.3
+DEFAULT_CONTEXT_TOKENS = 8192
+DEFAULT_MAX_OUTPUT_TOKENS = 800
+DEFAULT_CONTEXT_CHAR_BUDGET = 15000
 
 load_dotenv(ROOT_DIR / ".env", override=False)
 
