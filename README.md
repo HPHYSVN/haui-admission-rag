@@ -15,6 +15,8 @@ suy đoán khi kho dữ liệu không đủ bằng chứng.
   lệ.
 - Review tài liệu và chunk thủ công trước khi đưa vào truy xuất.
 - Truy xuất kết hợp BM25 và embedding multilingual.
+- Rerank các ứng viên bằng cross-encoder multilingual-compatible trước khi
+  đưa context vào LLM.
 - Lọc nghiêm ngặt theo năm và danh mục khi câu hỏi có yêu cầu cụ thể.
 - Sinh câu trả lời qua máy chủ vLLM tương thích OpenAI.
 - Hiển thị nguồn được lấy trực tiếp từ các chunk đã truy xuất.
@@ -100,6 +102,10 @@ RAG_EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 RAG_ALPHA=0.5
 RAG_SCORE_THRESHOLD=0.08
 RAG_MIN_TERM_COVERAGE=0.3
+RAG_RERANKER_ENABLED=true
+RAG_RERANKER_MODEL=Xenova/ms-marco-MiniLM-L-6-v2
+RAG_RERANKER_CANDIDATES=12
+RAG_RERANKER_RETRIEVAL_WEIGHT=4.0
 
 # Cấu hình FastAPI.
 APP_ALLOWED_ORIGINS=http://localhost:5173
@@ -109,6 +115,10 @@ RAG_TOP_K=4
 ```
 
 Không commit `.env`, API key, token hoặc thông tin xác thực thật.
+
+Reranker được tải lazy ở lần truy vấn đầu tiên. Để chạy baseline không có
+reranker, đặt `RAG_RERANKER_ENABLED=false`; model mặc định là cross-encoder
+`jinaai/jina-reranker-v2-base-multilingual`.
 
 ## Chạy hệ thống
 

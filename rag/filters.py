@@ -15,6 +15,18 @@ QUERY_STOP_WORDS = {
 }
 
 CATEGORY_HINTS: dict[str, tuple[str, ...]] = {
+    "02_ministry_regulations": (
+        "quy chế bộ",
+        "quy chế tuyển sinh",
+        "bộ gd",
+        "thông tư",
+        "khu vực ưu tiên",
+        "điểm ưu tiên",
+        "ngưỡng đầu vào",
+        "xét tuyển thẳng",
+        "số lượng tuyển sinh",
+        "xác nhận nhập học",
+    ),
     "03_cutoff_scores": ("điểm chuẩn", "điểm trúng tuyển", "điểm xét tuyển trúng tuyển"),
     "05_tuition_scholarship": ("học phí", "học bổng", "miễn giảm học phí"),
     "01_admission": ("phương thức tuyển sinh", "tuyển sinh", "đăng ký xét tuyển"),

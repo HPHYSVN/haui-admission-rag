@@ -7,8 +7,9 @@ import json
 from pathlib import Path
 
 from rag.bm25 import HybridRetriever
-from rag.config import DEFAULT_TOP_K, DEFAULT_VECTOR_INDEX_DIR
+from rag.config import DEFAULT_TOP_K, DEFAULT_VECTOR_INDEX_DIR, reranker_candidate_count
 from rag.pipeline import DEFAULT_CHUNKS_DIR, load_chunks
+from rag.reranker import CrossEncoderReranker
 
 
 def load_cases(test_file: Path) -> list[dict]:
@@ -39,11 +40,20 @@ def evaluate(
     chunks_dir: Path,
     top_k: int,
     index_dir: Path = DEFAULT_VECTOR_INDEX_DIR,
+    use_reranker: bool = False,
+    reranker_model: str | None = None,
+    output: Path | None = None,
 ) -> tuple[int, int]:
     cases = load_cases(test_file)
     chunks = load_chunks(chunks_dir)
-    retriever = HybridRetriever(chunks, index_dir=index_dir)
+    retriever = HybridRetriever(
+        chunks,
+        index_dir=index_dir,
+        reranker=CrossEncoderReranker(reranker_model) if use_reranker else None,
+        reranker_candidates=reranker_candidate_count(),
+    )
     passed = 0
+    report_rows: list[dict] = []
     for case in cases:
         question = case.get("question")
         expected_ids = case.get("expected_document_ids")
@@ -83,6 +93,17 @@ def evaluate(
         )
         success = document_match and chunk_match and year_match
         passed += int(success)
+        report_rows.append(
+            {
+                "id": case.get("id"),
+                "dataset": case.get("dataset"),
+                "question": question,
+                "expected_document_ids": expected_ids,
+                "retrieved_document_ids": retrieved_ids,
+                "retrieved_chunk_ids": retrieved_chunk_ids,
+                "success": success,
+            }
+        )
         mark = "PASS" if success else "FAIL"
         print(f"[{mark}] {question}")
         print(
@@ -90,6 +111,9 @@ def evaluate(
             f"retrieved_documents={retrieved_ids}; retrieved_chunks={retrieved_chunk_ids}"
         )
     print(f"\nRecall@{top_k}: {passed}/{len(cases)} ({passed / len(cases):.1%})")
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report_rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return passed, len(cases)
 
 
@@ -100,11 +124,27 @@ def main() -> int:
     parser.add_argument("--chunks-dir", type=Path, default=DEFAULT_CHUNKS_DIR)
     parser.add_argument("--index-dir", type=Path, default=DEFAULT_VECTOR_INDEX_DIR)
     parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
+    parser.add_argument(
+        "--reranker",
+        choices=("off", "on"),
+        default="off",
+        help="Enable the cross-encoder reranker (off is the baseline)",
+    )
+    parser.add_argument("--reranker-model", help="Override the fastembed cross-encoder model")
+    parser.add_argument("--output", type=Path, help="Write per-question results as JSON")
     args = parser.parse_args()
     if args.top_k < 1:
         parser.error("--top-k must be at least 1")
     try:
-        passed, total = evaluate(args.questions, args.chunks_dir, args.top_k, args.index_dir)
+        passed, total = evaluate(
+            args.questions,
+            args.chunks_dir,
+            args.top_k,
+            args.index_dir,
+            use_reranker=args.reranker == "on",
+            reranker_model=args.reranker_model,
+            output=args.output,
+        )
     except (ValueError, FileNotFoundError) as exc:
         parser.exit(1, f"Evaluation error: {exc}\n")
     return 0 if passed == total else 1

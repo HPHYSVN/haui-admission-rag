@@ -18,8 +18,11 @@ from rag.config import (
     DEFAULT_MAX_OUTPUT_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_VECTOR_INDEX_DIR,
+    reranker_candidate_count,
+    reranker_enabled,
 )
 from rag.document_workflow import DEFAULT_STATE_FILE, load_states
+from rag.reranker import CrossEncoderReranker
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_VLLM_MODEL = "JunHowie/Qwen3-4B-Instruct-2507-GPTQ-Int4"
@@ -206,12 +209,25 @@ class RAGPipeline:
         alpha: float | None = None,
         score_threshold: float | None = None,
         index_dir: Path = DEFAULT_VECTOR_INDEX_DIR,
+        use_reranker: bool | None = None,
+        reranker: CrossEncoderReranker | None = None,
+        reranker_candidates: int | None = None,
     ):
+        enabled = reranker_enabled() if use_reranker is None else use_reranker
+        reranker_instance = reranker if enabled else None
+        if enabled and reranker_instance is None:
+            reranker_instance = CrossEncoderReranker()
         self.retriever = HybridRetriever(
             chunks,
             alpha=alpha,
             score_threshold=score_threshold,
             index_dir=index_dir,
+            reranker=reranker_instance,
+            reranker_candidates=(
+                reranker_candidate_count()
+                if reranker_candidates is None
+                else reranker_candidates
+            ),
         )
         self.chat_client = chat_client
 

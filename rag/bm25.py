@@ -10,12 +10,15 @@ from typing import Any
 
 from rag.config import (
     DEFAULT_VECTOR_INDEX_DIR,
+    reranker_candidate_count,
+    reranker_retrieval_weight,
     retrieval_alpha,
     retrieval_min_term_coverage,
     retrieval_score_threshold,
 )
 from rag.embeddings import LocalEmbedder, VectorIndex
 from rag.filters import matching_documents, query_filters, query_term_coverage
+from rag.reranker import CrossEncoderReranker
 
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 
@@ -120,6 +123,8 @@ class HybridRetriever:
         score_threshold: float | None = None,
         index_dir: Path = DEFAULT_VECTOR_INDEX_DIR,
         embedder: LocalEmbedder | None = None,
+        reranker: CrossEncoderReranker | None = None,
+        reranker_candidates: int | None = None,
     ):
         if not documents:
             raise ValueError("Hybrid retriever needs at least one document chunk")
@@ -136,6 +141,13 @@ class HybridRetriever:
         self.score_threshold = score_threshold
         self.min_term_coverage = retrieval_min_term_coverage()
         self.index_dir = index_dir
+        self.reranker = reranker
+        self.reranker_candidates = (
+            reranker_candidate_count() if reranker_candidates is None else reranker_candidates
+        )
+        self.reranker_retrieval_weight = reranker_retrieval_weight()
+        if self.reranker_candidates < 1:
+            raise ValueError("reranker_candidates must be at least 1")
         self.bm25 = BM25Retriever(documents)
         self.semantic = SemanticRetriever(documents, index_dir, embedder)
 
@@ -176,4 +188,19 @@ class HybridRetriever:
             ):
                 fused.append((score, chunk))
         fused.sort(key=lambda item: (-item[0], item[1].get("chunk_id", "")))
-        return fused[:top_k]
+        if self.reranker is None:
+            return fused[:top_k]
+        candidate_count = max(top_k, self.reranker_candidates or top_k)
+        candidates = fused[:candidate_count]
+        rerank_scores = self.reranker.score(query, [chunk for _, chunk in candidates])
+        reranked = [
+            (
+                rerank_score + self.reranker_retrieval_weight * retrieval_score,
+                chunk,
+            )
+            for rerank_score, (retrieval_score, chunk) in zip(
+                rerank_scores, candidates, strict=True
+            )
+        ]
+        reranked.sort(key=lambda item: (-item[0], item[1].get("chunk_id", "")))
+        return reranked[:top_k]
