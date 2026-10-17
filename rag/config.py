@@ -20,6 +20,9 @@ DEFAULT_MIN_TERM_COVERAGE = 0.3
 DEFAULT_CONTEXT_TOKENS = 8192
 DEFAULT_MAX_OUTPUT_TOKENS = 800
 DEFAULT_CONTEXT_CHAR_BUDGET = 15000
+DEFAULT_RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
+DEFAULT_RERANKER_CANDIDATES = 12
+DEFAULT_RERANKER_RETRIEVAL_WEIGHT = 4.0
 
 load_dotenv(ROOT_DIR / ".env", override=False)
 
@@ -43,6 +46,36 @@ def retrieval_score_threshold() -> float:
 
 def retrieval_min_term_coverage() -> float:
     return _read_float("RAG_MIN_TERM_COVERAGE", DEFAULT_MIN_TERM_COVERAGE, minimum=0.0, maximum=1.0)
+
+
+def reranker_enabled() -> bool:
+    raw = os.getenv("RAG_RERANKER_ENABLED", "true").strip().casefold()
+    if raw not in {"true", "false", "1", "0", "yes", "no"}:
+        raise ValueError("RAG_RERANKER_ENABLED must be true or false")
+    return raw in {"true", "1", "yes"}
+
+
+def reranker_model_name() -> str:
+    return os.getenv("RAG_RERANKER_MODEL", DEFAULT_RERANKER_MODEL)
+
+
+def reranker_candidate_count() -> int:
+    raw = os.getenv("RAG_RERANKER_CANDIDATES", str(DEFAULT_RERANKER_CANDIDATES))
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"RAG_RERANKER_CANDIDATES must be an integer, got {raw!r}") from exc
+    if value < 1:
+        raise ValueError(f"RAG_RERANKER_CANDIDATES must be at least 1, got {value}")
+    return value
+
+
+def reranker_retrieval_weight() -> float:
+    return _read_float(
+        "RAG_RERANKER_RETRIEVAL_WEIGHT",
+        DEFAULT_RERANKER_RETRIEVAL_WEIGHT,
+        minimum=0.0,
+    )
 
 
 def _read_float(name: str, default: float, *, minimum: float, maximum: float | None = None) -> float:
