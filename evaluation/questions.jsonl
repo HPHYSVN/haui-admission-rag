@@ -18,7 +18,7 @@
 {"question":"Nhà trường tổ chức Ngày hội việc làm và liên kết với các doanh nghiệp như thế nào để tạo đầu ra nghề nghiệp cho sinh viên?","expected_document_ids":["06_career_001"],"notes":"Ngày hội việc làm và mạng lưới liên kết doanh nghiệp HaUI."}
 {"question":"Học phí và chính sách học bổng của Trường Đại học Bách Khoa Hà Nội năm 2026 như thế nào?","expected_document_ids":[],"notes":"Ngoài phạm vi HaUI; không được suy diễn."}
 {"question":"Trường Đại học Công nghiệp Hà Nội có cấp học bổng toàn phần du học thực tập ngoài Trái Đất (Sao Hỏa) cho sinh viên ngành Cơ khí không?","expected_document_ids":[],"notes":"Không có tài liệu phù hợp trong corpus; phòng chống ảo giác."}
-{"question":"      ","expected_document_ids":[],"notes":"Lỗi định dạng câu hỏi rỗng; kiểm tra validation HTTP 422."}
+
 
 
 {"_category": "baseline_tests", "question": "Học bổng mức 1 năm 2026 yêu cầu điều kiện gì?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026, "notes": "Học bổng; strict year and category filtering."}
