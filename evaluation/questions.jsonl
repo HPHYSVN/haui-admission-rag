@@ -1,26 +1,3 @@
-{"question":"Thời gian đào tạo và khối lượng kiến thức toàn khóa (số tín chỉ) ngành Công nghệ đa phương tiện tại HaUI là bao nhiêu?","expected_document_ids":["04_curriculum_002","06_career_002"],"notes":"Khối lượng kiến thức và thời gian đào tạo ngành Công nghệ đa phương tiện."}
-{"question":"Chương trình đào tạo ngành Quản trị nhà hàng và dịch vụ ăn uống của Đại học Công nghiệp Hà Nội gồm bao nhiêu tín chỉ?","expected_document_ids":["04_curriculum_001","06_career_005"],"notes":"Khối lượng kiến thức ngành Quản trị nhà hàng."}
-{"question":"Ngành Thiết kế cơ khí và kiểu dáng công nghiệp tại HaUI đào tạo trong mấy năm và yêu cầu hoàn thành bao nhiêu tín chỉ?","expected_document_ids":["04_curriculum_003","06_career_004"],"notes":"Thời gian và số tín chỉ ngành Thiết kế cơ khí."}
-{"question":"Mục tiêu đào tạo và chuẩn đầu ra (PEO, SO) của chương trình đào tạo ngành Công nghệ kỹ thuật Cơ điện tử ô tô như thế nào?","expected_document_ids":["04_curriculum_004"],"notes":"Mục tiêu PEO và chuẩn đầu ra SO ngành Cơ điện tử ô tô."}
-{"question":"Trường Đại học Công nghiệp Hà Nội hiện có những chương trình đào tạo nào được giảng dạy bằng Tiếng Anh?","expected_document_ids":["04_curriculum_006","05_tuition_scholarship_001"],"notes":"15 Chương trình đào tạo bằng Tiếng Anh."}
-{"question":"Điều kiện và đối tượng đăng ký xét tuyển chương trình đào tạo Kỹ sư chuyên sâu đặc thù bậc 7 tại HaUI quy định như thế nào?","expected_document_ids":["04_curriculum_008","01_admission_007"],"notes":"Chương trình Kỹ sư chuyên sâu đặc thù bậc 7."}
-{"question":"Chương trình đào tạo ngành Vi mạch bán dẫn của HaUI hướng tới trang bị những năng lực cốt lõi nào cho sinh viên?","expected_document_ids":["04_curriculum_007"],"notes":"Chương trình và ngưỡng đầu vào ngành Vi mạch bán dẫn."}
-{"question":"Điều kiện để thí sinh nhận học bổng Mức 1 miễn 100% học phí toàn khóa tại Đại học Công nghiệp Hà Nội năm 2026 là gì?","expected_document_ids":["05_tuition_scholarship_001"],"expected_year":2026,"notes":"Tiêu chí học bổng Mức 1 toàn khóa năm 2026."}
-{"question":"Chính sách xét học bổng Mức 2 và Mức 3 dành cho tân sinh viên nhập học HaUI năm 2026 quy định mức điểm xét tuyển tối thiểu là bao nhiêu?","expected_document_ids":["05_tuition_scholarship_001"],"expected_year":2026,"notes":"Mốc điểm xét học bổng Mức 2 (25.00) và Mức 3 (24.00) năm 2026."}
-{"question":"Để duy trì học bổng đầu vào trong các học kỳ tiếp theo tại HaUI, sinh viên cần đáp ứng kết quả học tập và rèn luyện như thế nào?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Điều kiện duy trì học bổng: ĐTBCHK >= 2.5 và rèn luyện tốt."}
-{"question":"Học bổng khuyến học Nguyễn Thanh Bình của Đại học Công nghiệp Hà Nội dành cho những đối tượng sinh viên nào?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Đối tượng nhận học bổng Nguyễn Thanh Bình."}
-{"question":"Học bổng đầu vào của HaUI có được bảo lưu hoặc quy đổi thành tiền mặt nếu sinh viên tạm hoãn nhập học không?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Quy định không bảo lưu, không quy đổi tiền mặt."}
-{"question":"Học phí tại Trường Đại học Công nghiệp Hà Nội được tính như thế nào, thu theo niên chế hay theo tín chỉ?","expected_document_ids":["01_admission_002","05_tuition_scholarship_001"],"notes":"Cơ chế thu học phí theo số tín chỉ đăng ký."}
-{"question":"Sinh viên theo học các chương trình đào tạo bằng Tiếng Anh tại HaUI có cơ hội nhận những mức học bổng đầu vào nào?","expected_document_ids":["05_tuition_scholarship_001","04_curriculum_006"],"notes":"Học bổng các mức cho hệ đào tạo bằng Tiếng Anh."}
-{"question":"Sau khi tốt nghiệp ngành Công nghệ đa phương tiện tại HaUI, người học có thể làm những công việc gì và ở môi trường nào?","expected_document_ids":["06_career_002","04_curriculum_002"],"notes":"Vị trí việc làm ngành Công nghệ đa phương tiện."}
-{"question":"Cơ hội việc làm và triển vọng nghề nghiệp của sinh viên ngành Thiết kế cơ khí và kiểu dáng công nghiệp HaUI sau khi ra trường là gì?","expected_document_ids":["06_career_004","04_curriculum_003"],"notes":"Vị trí việc làm ngành Thiết kế cơ khí và kiểu dáng CN."}
-{"question":"Sinh viên ngành Logistics và Quản lý chuỗi cung ứng của HaUI có thể ứng tuyển vào những vị trí công tác nào sau khi tốt nghiệp?","expected_document_ids":["06_career_003","04_curriculum_009"],"notes":"Vị trí việc làm khối ngành Logistics & Chuỗi cung ứng."}
-{"question":"Nhà trường tổ chức Ngày hội việc làm và liên kết với các doanh nghiệp như thế nào để tạo đầu ra nghề nghiệp cho sinh viên?","expected_document_ids":["06_career_001"],"notes":"Ngày hội việc làm và mạng lưới liên kết doanh nghiệp HaUI."}
-{"question":"Học phí và chính sách học bổng của Trường Đại học Bách Khoa Hà Nội năm 2026 như thế nào?","expected_document_ids":[],"notes":"Ngoài phạm vi HaUI; không được suy diễn."}
-{"question":"Trường Đại học Công nghiệp Hà Nội có cấp học bổng toàn phần du học thực tập ngoài Trái Đất (Sao Hỏa) cho sinh viên ngành Cơ khí không?","expected_document_ids":[],"notes":"Không có tài liệu phù hợp trong corpus; phòng chống ảo giác."}
-
-
-
 {"_category": "baseline_tests", "question": "Học bổng mức 1 năm 2026 yêu cầu điều kiện gì?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026, "notes": "Học bổng; strict year and category filtering."}
 {"_category": "baseline_tests", "question": "Điểm chuẩn Kỹ thuật phần mềm năm 2026 là bao nhiêu?", "expected_document_ids": ["03_cutoff_scores_001"], "expected_year": 2026, "notes": "Must not retrieve another year as an answer."}
 {"_category": "baseline_tests", "question": "Các phương thức tuyển sinh đại học chính quy HaUI năm 2026 là gì?", "expected_document_ids": ["01_admission_004"], "expected_year": 2026, "notes": "Admission methods."}
@@ -63,3 +40,32 @@
 {"_category": "09_training_regulations", "question": "Thí sinh trúng tuyển đại học được bảo lưu kết quả trong những trường hợp nào?", "expected_document_ids": ["09_training_regulations_001", "09_training_regulations_003"], "notes": "Điều kiện bảo lưu kết quả trúng tuyển theo quy chế đào tạo và tuyển sinh."}
 {"_category": "09_training_regulations", "question": "Điều kiện để sinh viên được xét và công nhận tốt nghiệp đại học chính quy là gì?", "expected_document_ids": ["09_training_regulations_003"], "notes": "Điều kiện công nhận tốt nghiệp đại học tại HaUI."}
 {"_category": "09_training_regulations", "question": "Quy chế đào tạo quy định những trường hợp nào sinh viên bị cảnh báo học tập?", "expected_document_ids": ["09_training_regulations_003"], "notes": "Quy định cảnh báo học tập đối với sinh viên chính quy."}
+
+//PhẦN 4//
+
+{"question":"Thời gian đào tạo và khối lượng kiến thức toàn khóa (số tín chỉ) ngành Công nghệ đa phương tiện tại HaUI là bao nhiêu?","expected_document_ids":["04_curriculum_002","06_career_002"],"notes":"Khối lượng kiến thức và thời gian đào tạo ngành Công nghệ đa phương tiện."}
+{"question":"Chương trình đào tạo ngành Quản trị nhà hàng và dịch vụ ăn uống của Đại học Công nghiệp Hà Nội gồm bao nhiêu tín chỉ?","expected_document_ids":["04_curriculum_001","06_career_005"],"notes":"Khối lượng kiến thức ngành Quản trị nhà hàng."}
+{"question":"Ngành Thiết kế cơ khí và kiểu dáng công nghiệp tại HaUI đào tạo trong mấy năm và yêu cầu hoàn thành bao nhiêu tín chỉ?","expected_document_ids":["04_curriculum_003","06_career_004"],"notes":"Thời gian và số tín chỉ ngành Thiết kế cơ khí."}
+{"question":"Mục tiêu đào tạo và chuẩn đầu ra (PEO, SO) của chương trình đào tạo ngành Công nghệ kỹ thuật Cơ điện tử ô tô như thế nào?","expected_document_ids":["04_curriculum_004"],"notes":"Mục tiêu PEO và chuẩn đầu ra SO ngành Cơ điện tử ô tô."}
+{"question":"Trường Đại học Công nghiệp Hà Nội hiện có những chương trình đào tạo nào được giảng dạy bằng Tiếng Anh?","expected_document_ids":["04_curriculum_006","05_tuition_scholarship_001"],"notes":"15 Chương trình đào tạo bằng Tiếng Anh."}
+{"question":"Điều kiện và đối tượng đăng ký xét tuyển chương trình đào tạo Kỹ sư chuyên sâu đặc thù bậc 7 tại HaUI quy định như thế nào?","expected_document_ids":["04_curriculum_008","01_admission_007"],"notes":"Chương trình Kỹ sư chuyên sâu đặc thù bậc 7."}
+{"question":"Chương trình đào tạo ngành Vi mạch bán dẫn của HaUI hướng tới trang bị những năng lực cốt lõi nào cho sinh viên?","expected_document_ids":["04_curriculum_007"],"notes":"Chương trình và ngưỡng đầu vào ngành Vi mạch bán dẫn."}
+
+//PHẦN 5//
+
+{"question":"Điều kiện để thí sinh nhận học bổng Mức 1 miễn 100% học phí toàn khóa tại Đại học Công nghiệp Hà Nội năm 2026 là gì?","expected_document_ids":["05_tuition_scholarship_001"],"expected_year":2026,"notes":"Tiêu chí học bổng Mức 1 toàn khóa năm 2026."}
+{"question":"Chính sách xét học bổng Mức 2 và Mức 3 dành cho tân sinh viên nhập học HaUI năm 2026 quy định mức điểm xét tuyển tối thiểu là bao nhiêu?","expected_document_ids":["05_tuition_scholarship_001"],"expected_year":2026,"notes":"Mốc điểm xét học bổng Mức 2 (25.00) và Mức 3 (24.00) năm 2026."}
+{"question":"Để duy trì học bổng đầu vào trong các học kỳ tiếp theo tại HaUI, sinh viên cần đáp ứng kết quả học tập và rèn luyện như thế nào?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Điều kiện duy trì học bổng: ĐTBCHK >= 2.5 và rèn luyện tốt."}
+{"question":"Học bổng khuyến học Nguyễn Thanh Bình của Đại học Công nghiệp Hà Nội dành cho những đối tượng sinh viên nào?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Đối tượng nhận học bổng Nguyễn Thanh Bình."}
+{"question":"Học bổng đầu vào của HaUI có được bảo lưu hoặc quy đổi thành tiền mặt nếu sinh viên tạm hoãn nhập học không?","expected_document_ids":["05_tuition_scholarship_001"],"notes":"Quy định không bảo lưu, không quy đổi tiền mặt."}
+{"question":"Học phí tại Trường Đại học Công nghiệp Hà Nội được tính như thế nào, thu theo niên chế hay theo tín chỉ?","expected_document_ids":["01_admission_002","05_tuition_scholarship_001"],"notes":"Cơ chế thu học phí theo số tín chỉ đăng ký."}
+{"question":"Sinh viên theo học các chương trình đào tạo bằng Tiếng Anh tại HaUI có cơ hội nhận những mức học bổng đầu vào nào?","expected_document_ids":["05_tuition_scholarship_001","04_curriculum_006"],"notes":"Học bổng các mức cho hệ đào tạo bằng Tiếng Anh."}
+
+//PHẦN 6//
+
+{"question":"Sau khi tốt nghiệp ngành Công nghệ đa phương tiện tại HaUI, người học có thể làm những công việc gì và ở môi trường nào?","expected_document_ids":["06_career_002","04_curriculum_002"],"notes":"Vị trí việc làm ngành Công nghệ đa phương tiện."}
+{"question":"Cơ hội việc làm và triển vọng nghề nghiệp của sinh viên ngành Thiết kế cơ khí và kiểu dáng công nghiệp HaUI sau khi ra trường là gì?","expected_document_ids":["06_career_004","04_curriculum_003"],"notes":"Vị trí việc làm ngành Thiết kế cơ khí và kiểu dáng CN."}
+{"question":"Sinh viên ngành Logistics và Quản lý chuỗi cung ứng của HaUI có thể ứng tuyển vào những vị trí công tác nào sau khi tốt nghiệp?","expected_document_ids":["06_career_003","04_curriculum_009"],"notes":"Vị trí việc làm khối ngành Logistics & Chuỗi cung ứng."}
+{"question":"Nhà trường tổ chức Ngày hội việc làm và liên kết với các doanh nghiệp như thế nào để tạo đầu ra nghề nghiệp cho sinh viên?","expected_document_ids":["06_career_001"],"notes":"Ngày hội việc làm và mạng lưới liên kết doanh nghiệp HaUI."}
+{"question":"Học phí và chính sách học bổng của Trường Đại học Bách Khoa Hà Nội năm 2026 như thế nào?","expected_document_ids":[],"notes":"Ngoài phạm vi HaUI; không được suy diễn."}
+{"question":"Trường Đại học Công nghiệp Hà Nội có cấp học bổng toàn phần du học thực tập ngoài Trái Đất (Sao Hỏa) cho sinh viên ngành Cơ khí không?","expected_document_ids":[],"notes":"Không có tài liệu phù hợp trong corpus; phòng chống ảo giác."}
