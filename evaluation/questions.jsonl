@@ -19,3 +19,47 @@
 {"question":"Học phí và chính sách học bổng của Trường Đại học Bách Khoa Hà Nội năm 2026 như thế nào?","expected_document_ids":[],"notes":"Ngoài phạm vi HaUI; không được suy diễn."}
 {"question":"Trường Đại học Công nghiệp Hà Nội có cấp học bổng toàn phần du học thực tập ngoài Trái Đất (Sao Hỏa) cho sinh viên ngành Cơ khí không?","expected_document_ids":[],"notes":"Không có tài liệu phù hợp trong corpus; phòng chống ảo giác."}
 {"question":"      ","expected_document_ids":[],"notes":"Lỗi định dạng câu hỏi rỗng; kiểm tra validation HTTP 422."}
+
+
+{"_category": "baseline_tests", "question": "Học bổng mức 1 năm 2026 yêu cầu điều kiện gì?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026, "notes": "Học bổng; strict year and category filtering."}
+{"_category": "baseline_tests", "question": "Điểm chuẩn Kỹ thuật phần mềm năm 2026 là bao nhiêu?", "expected_document_ids": ["03_cutoff_scores_001"], "expected_year": 2026, "notes": "Must not retrieve another year as an answer."}
+{"_category": "baseline_tests", "question": "Các phương thức tuyển sinh đại học chính quy HaUI năm 2026 là gì?", "expected_document_ids": ["01_admission_004"], "expected_year": 2026, "notes": "Admission methods."}
+{"_category": "baseline_tests", "question": "Học phí năm 2026 là bao nhiêu?", "expected_document_ids": ["05_tuition_scholarship_003"], "expected_year": 2026, "notes": "Tuition."}
+{"_category": "baseline_tests", "question": "Ngành kỹ thuật ô tô học những nội dung gì?", "expected_document_ids": ["04_curriculum_004", "07_career_orientation_019"], "notes": "Question without an explicit year."}
+{"_category": "baseline_tests", "question": "Chính sách hoàn tiền vé tàu vũ trụ cho sinh viên là gì?", "expected_document_ids": [], "notes": "No relevant corpus answer; sources should be empty."}
+{"_category": "baseline_tests", "question": "Điểm chuẩn HaUI các năm gần đây", "expected_document_ids": ["03_cutoff_scores_001", "03_cutoff_scores_004"], "notes": "Historical query without a single-year constraint."}
+
+// ==============================================================================
+// PHẦN 8: THỦ TỤC ĐĂNG KÝ XÉT TUYỂN & QUY TRÌNH NHẬP HỌC (08_enrollment_procedure)
+// Bao gồm: Hồ sơ dự tuyển, nộp lệ phí, nhập học trực tuyến, làm thẻ SV, miễn giảm học phí, sửa sai thông tin
+// ==============================================================================
+{"_category": "08_enrollment_procedure", "question": "Thí sinh cần chuẩn bị những hồ sơ giấy tờ gì khi đăng ký dự tuyển trực tuyến năm 2026?", "expected_document_ids": ["08_enrollment_procedure_003", "08_enrollment_procedure_001"], "expected_year": 2026, "notes": "Hồ sơ giấy tờ đăng ký dự tuyển trực tuyến 2026."}
+{"_category": "08_enrollment_procedure", "question": "Quy trình đăng ký dự tuyển đại học chính quy năm 2026 gồm những bước nào?", "expected_document_ids": ["08_enrollment_procedure_003"], "expected_year": 2026, "notes": "Quy trình 4 bước đăng ký dự tuyển tại xettuyen.haui.edu.vn."}
+{"_category": "08_enrollment_procedure", "question": "Nếu muốn nhập lại điểm học bạ hoặc cập nhật lại điểm chứng chỉ ngoại ngữ trên hệ thống xét tuyển thì làm thế nào?", "expected_document_ids": ["08_enrollment_procedure_003", "08_enrollment_procedure_001"], "notes": "Thao tác cập nhật lại điểm sau khi đã chọn nguyện vọng."}
+{"_category": "08_enrollment_procedure", "question": "Các bước làm thủ tục nhập học trực tuyến năm 2026 cho tân sinh viên như thế nào?", "expected_document_ids": ["08_enrollment_procedure_002"], "expected_year": 2026, "notes": "Quy trình 3 bước nhập học trực tuyến tại nhaphoc.haui.edu.vn."}
+{"_category": "08_enrollment_procedure", "question": "Hồ sơ mở thẻ sinh viên tích hợp ngân hàng Vietinbank gồm những giấy tờ gì?", "expected_document_ids": ["08_enrollment_procedure_002"], "notes": "Hồ sơ mở thẻ tích hợp Vietinbank và xác minh số điện thoại chính chủ."}
+{"_category": "08_enrollment_procedure", "question": "Hồ sơ miễn giảm học phí cho đối tượng người khuyết tật hoặc mồ côi gồm những gì?", "expected_document_ids": ["08_enrollment_procedure_002"], "notes": "Hồ sơ chính sách miễn giảm học phí cho sinh viên."}
+{"_category": "08_enrollment_procedure", "question": "Nếu thông tin sinh viên bị sai sót họ tên ngày sinh thì nộp phiếu yêu cầu sửa sai ở đâu?", "expected_document_ids": ["08_enrollment_procedure_002"], "notes": "Thủ tục sửa sai thông tin tại Phòng 204 Nhà A2 Cơ sở 1."}
+
+// ==============================================================================
+// PHẦN 7: ĐỊNH HƯỚNG NGHỀ NGHIỆP, CHUẨN ĐẦU RA & KHỐI LƯỢNG ĐÀO TẠO (07_career_orientation)
+// Bao gồm: Cơ hội việc làm, chuẩn ngoại ngữ, số tín chỉ, so sánh ngành học (CNTT, Đa phương tiện, Ô tô,...)
+// ==============================================================================
+{"_category": "07_career_orientation", "question": "Cơ hội việc làm sau khi tốt nghiệp ngành Công nghệ thông tin là gì?", "expected_document_ids": ["07_career_orientation_006"], "notes": "Vị trí việc làm sau tốt nghiệp ngành CNTT."}
+{"_category": "07_career_orientation", "question": "Sinh viên tốt nghiệp ngành Khoa học máy tính có thể đảm nhận những vị trí công việc nào?", "expected_document_ids": ["07_career_orientation_007", "07_career_orientation_011"], "notes": "Vị trí việc làm ngành Khoa học máy tính."}
+{"_category": "07_career_orientation", "question": "Ngành Kỹ thuật phần mềm đào tạo những vị trí nghề nghiệp nào?", "expected_document_ids": ["07_career_orientation_008"], "notes": "Định hướng nghề nghiệp và việc làm ngành Kỹ thuật phần mềm."}
+{"_category": "07_career_orientation", "question": "Khối lượng kiến thức toàn khóa ngành Quản trị nhà hàng và dịch vụ ăn uống là bao nhiêu tín chỉ?", "expected_document_ids": ["07_career_orientation_001"], "notes": "Số tín chỉ ngành Quản trị nhà hàng (142 tín chỉ)."}
+{"_category": "07_career_orientation", "question": "Ngành Robot và trí tuệ nhân tạo trang bị những kiến thức gì và cơ hội việc làm ra sao?", "expected_document_ids": ["07_career_orientation_014"], "notes": "Định hướng nghề nghiệp và cơ hội việc làm ngành Robot và AI."}
+{"_category": "07_career_orientation", "question": "Sinh viên ngành Công nghệ đa phương tiện cần đạt chuẩn đầu ra ngoại ngữ bậc mấy?", "expected_document_ids": ["07_career_orientation_002"], "notes": "Chuẩn đầu ra ngoại ngữ bậc 3/6 (B1) của ngành Đa phương tiện."}
+{"_category": "07_career_orientation", "question": "Cơ hội việc làm của sinh viên ngành Trung Quốc học sau khi ra trường?", "expected_document_ids": ["07_career_orientation_005"], "notes": "Cơ hội nghề nghiệp ngành Trung Quốc học."}
+{"_category": "07_career_orientation", "question": "Ngành Công nghệ kỹ thuật Ô tô và Kỹ thuật Ô tô năng lượng mới khác nhau như thế nào?", "expected_document_ids": ["07_career_orientation_016", "07_career_orientation_019"], "notes": "So sánh định hướng ngành Ô tô truyền thống và Ô tô năng lượng mới."}
+{"_category": "07_career_orientation", "question": "Ngành An toàn thông tin đào tạo những chuẩn đầu ra và cơ hội nghề nghiệp nào?", "expected_document_ids": ["07_career_orientation_010"], "notes": "Chuẩn đầu ra và cơ hội việc làm ngành An toàn thông tin."}
+
+// ==============================================================================
+// PHẦN 9: QUY CHẾ TUYỂN SINH, QUY CHẾ ĐÀO TẠO & ĐIỀU KIỆN TỐT NGHIỆP (09_training_regulations)
+// Bao gồm: Công thức điểm ưu tiên, điều kiện bảo lưu, cảnh báo học tập, điều kiện tốt nghiệp
+// ==============================================================================
+{"_category": "09_training_regulations", "question": "Công thức tính điểm ưu tiên khi thí sinh đạt từ 22,50 điểm trở lên được quy định như thế nào?", "expected_document_ids": ["09_training_regulations_001", "09_training_regulations_002"], "notes": "Công thức giảm dần điểm ưu tiên cho thí sinh điểm cao."}
+{"_category": "09_training_regulations", "question": "Thí sinh trúng tuyển đại học được bảo lưu kết quả trong những trường hợp nào?", "expected_document_ids": ["09_training_regulations_001", "09_training_regulations_003"], "notes": "Điều kiện bảo lưu kết quả trúng tuyển theo quy chế đào tạo và tuyển sinh."}
+{"_category": "09_training_regulations", "question": "Điều kiện để sinh viên được xét và công nhận tốt nghiệp đại học chính quy là gì?", "expected_document_ids": ["09_training_regulations_003"], "notes": "Điều kiện công nhận tốt nghiệp đại học tại HaUI."}
+{"_category": "09_training_regulations", "question": "Quy chế đào tạo quy định những trường hợp nào sinh viên bị cảnh báo học tập?", "expected_document_ids": ["09_training_regulations_003"], "notes": "Quy định cảnh báo học tập đối với sinh viên chính quy."}
