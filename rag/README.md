@@ -377,11 +377,10 @@ IDF grows when a term appears in fewer chunks.
 **The embedding model** maps the title, heading path, and chunk text to a
 numeric vector. Similar meanings can be close even when they do not share exact
 words. The configured default is
-`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. We compare
-vectors with cosine similarity, which measures their angle rather than raw
-length. It helps with paraphrases, but can confuse topics that are broadly
-related; that is why lexical scores, metadata filters, and coverage remain
-useful.
+`intfloat/multilingual-e5-large`. We compare vectors with cosine similarity,
+which measures their angle rather than raw length. It helps with paraphrases,
+but can confuse topics that are broadly related; that is why lexical scores,
+metadata filters, and coverage remain useful.
 
 **FAISS is now used for dense lookup.** The CPU `IndexFlatIP` index stores
 float32, L2-normalized embedding vectors and searches them with inner product;

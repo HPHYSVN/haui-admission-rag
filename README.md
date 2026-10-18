@@ -98,12 +98,12 @@ VLLM_MODEL=JunHowie/Qwen3-4B-Instruct-2507-GPTQ-Int4
 VLLM_API_KEY=
 
 # Model embedding đa ngôn ngữ, tải vào cache cục bộ khi dùng lần đầu.
-RAG_EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+RAG_EMBEDDING_MODEL=BAAI/bge-m3
 RAG_ALPHA=0.5
 RAG_SCORE_THRESHOLD=0.08
 RAG_MIN_TERM_COVERAGE=0.3
 RAG_RERANKER_ENABLED=true
-RAG_RERANKER_MODEL=Xenova/ms-marco-MiniLM-L-6-v2
+RAG_RERANKER_MODEL=BAAI/bge-reranker-v2-m3
 RAG_RERANKER_CANDIDATES=12
 RAG_RERANKER_RETRIEVAL_WEIGHT=4.0
 
@@ -118,7 +118,7 @@ Không commit `.env`, API key, token hoặc thông tin xác thực thật.
 
 Reranker được tải lazy ở lần truy vấn đầu tiên. Để chạy baseline không có
 reranker, đặt `RAG_RERANKER_ENABLED=false`; model mặc định là cross-encoder
-`jinaai/jina-reranker-v2-base-multilingual`.
+  `BAAI/bge-reranker-v2-m3`.
 
 ## Chạy hệ thống
 

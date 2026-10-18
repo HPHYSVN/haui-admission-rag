@@ -6,35 +6,77 @@ expected document/chunk IDs, an expected year, and reviewer notes. Retrieval
 results and generation checks are separate so a correct source lookup is not
 confused with a fluent answer.
 
-Run the baseline and reranked retrieval evaluations with the same suite:
+Team: để thêm câu hỏi, chỉ cần chèn JSON line vào `evaluation/questions.jsonl`
+và chạy lại evaluation. Cấu trúc mỗi dòng:
 
-```bash
-uv run python -m rag.evaluate --reranker off --output evaluation/retrieval/baseline.json
-uv run python -m rag.evaluate --reranker on --output evaluation/retrieval/reranked.json
+```json
+{"id":"04-01","dataset":"01","question":"Năm 2026 HaUI tuyển sinh đại học chính quy bằng những phương thức nào?","expected_document_ids":["01_admission_004"],"expected_year":2026}
 ```
 
-`--reranker off` is the baseline. `--reranker on` scores the hybrid candidates
-with the configured fastembed cross-encoder and then returns the top-k chunks.
-Use `retrieval/` for reviewed retrieval run outputs and `generation/` for
-manually assessed answer outputs. Keep expected answers out of prompts.
+## Evaluation chuẩn RAGAS
 
-## RAGAS end-to-end evaluation
-
-RAGAS evaluates the complete retrieval-to-generation pipeline with
-faithfulness, answer relevancy, context precision, and context recall. It
-requires the local vLLM endpoint configured in `.env`:
+Chạy full pipeline end-to-end (retrieval + generation + judge LLM):
 
 ```bash
-uv run python -m evaluation.run_ragas \
-  --reranker off \
-  --output evaluation/ragas/baseline-v2.json
-
+# Cấu hình mặc định (sau khi thay model retrieval)
+RAG_EMBEDDING_MODEL=intfloat/multilingual-e5-large \
+RAG_RERANKER_MODEL=jinaai/jina-reranker-v2-base-multilingual \
 uv run python -m evaluation.run_ragas \
   --reranker on \
-  --reranker-model Xenova/ms-marco-MiniLM-L-6-v2 \
   --references evaluation/ragas/references.json \
-  --output evaluation/ragas/reranked-v2.json
+  --output evaluation/ragas/reranked-new.json
+
+# Cấu hình baseline (no reranker)
+uv run python -m evaluation.run_ragas \
+  --reranker off \
+  --references evaluation/ragas/references.json \
+  --output evaluation/ragas/baseline-new.json
 ```
 
-Use the same `--references` file for both runs. The detailed comparison is in
-`evaluation/ragas/report.md`.
+Sử dụng cùng `--references` file cho cả hai lượt để đảm bảo so sánh công bằng.
+
+## Bảng so sánh before/after (quy trình tự động)
+
+Script `evaluation/run_ragas_benchmark.py` hỗ trợ chạy before và after cùng lúc và
+so sánh metric:
+
+```bash
+# Chạy cả before và after, lưu vào benchmark.json
+uv run python -m evaluation.run_ragas_benchmark --output evaluation/ragas/benchmark-new.json
+
+# Chạy riêng từng cấu hình
+uv run python -m evaluation.run_ragas_benchmark --config before --output evaluation/ragas/before.json
+uv run python -m evaluation.run_ragas_benchmark --config after  --output evaluation/ragas/after.json
+```
+
+Kết quả xuất ra `benchmark.json` chứa:
+- `before`: kết quả cấu hình cũ (embedding MiniLM)
+- `after`: kết quả cấu hình mới (embedding e5-large)
+- `summary`: thông tin model cấu hình
+
+## Artifact và tái chạy
+
+```bash
+# Làm mới tất cả kết quả evaluation
+rm -f evaluation/ragas/*.json
+uv run python -m evaluation.run_ragas_benchmark --output evaluation/ragas/benchmark-new.json
+```
+
+## Metrics và tầm quan trọng
+
+| Metric | Ý nghĩa |
+|---|---|
+| Faithfulness | câu trả lời có được hỗ trợ bởi ngữ cảnh hay không |
+| Answer relevancy | câu trả lời có trực tiếp trả lời câu hỏi |
+| Context precision | context liên quan có xếp cao đúng thứ tự |
+| Context recall | ngữ cảnh có bao phủ thông tin cần trả lời |
+
+Bảo toàn hai lớp đánh giá:
+1. **Retrieval hit/Recall@K** – phát hiện mất nguồn (từ `rag.evaluate`)
+2. **RAGAS** + đánh giá thủ công – phát hiện ngữ cảnh nhiễu, câu trả lời thiếu căn cứ
+
+## Kiểm thử
+
+```bash
+uv run python -m unittest discover -s tests -v
+```
