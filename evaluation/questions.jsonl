@@ -6,6 +6,31 @@
 {"_category": "baseline_tests", "question": "Chính sách hoàn tiền vé tàu vũ trụ cho sinh viên là gì?", "expected_document_ids": [], "notes": "No relevant corpus answer; sources should be empty."}
 {"_category": "baseline_tests", "question": "Điểm chuẩn HaUI các năm gần đây", "expected_document_ids": ["03_cutoff_scores_001", "03_cutoff_scores_004"], "notes": "Historical query without a single-year constraint."}
 
+{"id":"01-01","dataset":"01","question":"Năm 2026 HaUI tuyển sinh đại học chính quy bằng những phương thức nào?","expected_document_ids":["01_admission_004"],"expected_year":2026}
+{"id":"01-02","dataset":"01","question":"Đối tượng và điều kiện dự tuyển đại học HaUI năm 2026 là gì?","expected_document_ids":["01_admission_001"],"expected_year":2026}
+{"id":"01-03","dataset":"01","question":"Thí sinh đăng ký xét tuyển đại học HaUI năm 2026 ở đâu và như thế nào?","expected_document_ids":["01_admission_005"],"expected_year":2026}
+{"id":"01-04","dataset":"01","question":"Hồ sơ đăng ký dự tuyển đại học chính quy HaUI năm 2026 gồm những gì?","expected_document_ids":["01_admission_005"],"expected_year":2026}
+{"id":"01-05","dataset":"01","question":"Chỉ tiêu tuyển sinh đại học HaUI năm 2026 được phân bổ ra sao?","expected_document_ids":["01_admission_003"],"expected_year":2026}
+{"id":"01-06","dataset":"01","question":"Quy định ưu tiên trong tuyển sinh đại học HaUI năm 2026 như thế nào?","expected_document_ids":["01_admission_001","01_admission_004"],"expected_year":2026}
+{"id":"01-07","dataset":"01","question":"Lịch tuyển sinh và thời gian đăng ký xét tuyển HaUI năm 2026 là khi nào?","expected_document_ids":["01_admission_001","01_admission_002"],"expected_year":2026}
+{"id":"01-08","dataset":"01","question":"Các ngành đào tạo tuyển sinh đại học chính quy HaUI năm 2026 gồm những ngành nào?","expected_document_ids":["01_admission_003","01_admission_004"],"expected_year":2026}
+{"id":"02-01","dataset":"02","question":"Theo quy chế Bộ GD&ĐT năm 2026, đối tượng nào được đăng ký tuyển sinh đại học?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-02","dataset":"02","question":"Quy định về khu vực ưu tiên trong tuyển sinh đại học năm 2026 là gì?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-03","dataset":"02","question":"Cách tính điểm ưu tiên khi xét tuyển đại học năm 2026 như thế nào?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-04","dataset":"02","question":"Thí sinh được đăng ký bao nhiêu nguyện vọng xét tuyển đại học năm 2026?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-05","dataset":"02","question":"Quy định xác nhận nhập học sau khi trúng tuyển đại học năm 2026 là gì?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-06","dataset":"02","question":"Ngưỡng đầu vào đối với thí sinh xét tuyển đại học năm 2026 được quy định thế nào?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-07","dataset":"02","question":"Quy chế tuyển sinh năm 2026 quy định việc xét tuyển thẳng ra sao?","expected_document_ids":["02_ministry_regulations_001"],"expected_year":2026}
+{"id":"02-08","dataset":"02","question":"Bộ GD&ĐT xác định số lượng tuyển sinh đại học năm 2026 theo nguyên tắc nào?","expected_document_ids":["02_ministry_regulations_003"],"expected_year":2026}
+{"id":"03-01","dataset":"03","question":"Điểm trúng tuyển đại học chính quy HaUI năm 2026 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_002"],"expected_year":2026}
+{"id":"03-02","dataset":"03","question":"Điểm chuẩn chương trình đào tạo bằng tiếng Anh của HaUI năm 2026 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_003"],"expected_year":2026}
+{"id":"03-03","dataset":"03","question":"Điểm chuẩn ngành Kỹ thuật phần mềm HaUI năm 2026 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_002"],"expected_year":2026}
+{"id":"03-04","dataset":"03","question":"Kết quả xét tuyển đợt 2 chương trình tiếng Anh HaUI năm 2026 có điểm nào?","expected_document_ids":["03_cutoff_scores_001"],"expected_year":2026}
+{"id":"03-05","dataset":"03","question":"Điểm chuẩn đại học chính quy HaUI năm 2025 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_004"],"expected_year":2025}
+{"id":"03-06","dataset":"03","question":"Điểm xét tuyển sớm đại học HaUI năm 2024 được công bố như thế nào?","expected_document_ids":["03_cutoff_scores_005"],"expected_year":2024}
+{"id":"03-07","dataset":"03","question":"Điểm chuẩn đại học HaUI theo các phương thức năm 2023 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_007"],"expected_year":2023}
+{"id":"03-08","dataset":"03","question":"Điểm chuẩn trúng tuyển các phương thức xét tuyển đại học HaUI năm 2022 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_009"],"expected_year":2022}
+
 // ==============================================================================
 // PHẦN 8: THỦ TỤC ĐĂNG KÝ XÉT TUYỂN & QUY TRÌNH NHẬP HỌC (08_enrollment_procedure)
 // Bao gồm: Hồ sơ dự tuyển, nộp lệ phí, nhập học trực tuyến, làm thẻ SV, miễn giảm học phí, sửa sai thông tin
