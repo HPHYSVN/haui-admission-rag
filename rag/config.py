@@ -11,7 +11,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_CHUNKS_DIR = ROOT_DIR / "data" / "chunks" / "final"
 DEFAULT_PROPOSALS_DIR = ROOT_DIR / "data" / "chunks" / "proposals"
 DEFAULT_VECTOR_INDEX_DIR = ROOT_DIR / "data" / "indexes" / "vector"
-DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+DEFAULT_EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 
 DEFAULT_TOP_K = 4
 DEFAULT_ALPHA = 0.5

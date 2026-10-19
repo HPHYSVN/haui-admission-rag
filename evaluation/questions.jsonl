@@ -94,3 +94,46 @@
 {"question":"Nhà trường tổ chức Ngày hội việc làm và liên kết với các doanh nghiệp như thế nào để tạo đầu ra nghề nghiệp cho sinh viên?","expected_document_ids":["06_career_001"],"notes":"Ngày hội việc làm và mạng lưới liên kết doanh nghiệp HaUI."}
 {"question":"Học phí và chính sách học bổng của Trường Đại học Bách Khoa Hà Nội năm 2026 như thế nào?","expected_document_ids":[],"notes":"Ngoài phạm vi HaUI; không được suy diễn."}
 {"question":"Trường Đại học Công nghiệp Hà Nội có cấp học bổng toàn phần du học thực tập ngoài Trái Đất (Sao Hỏa) cho sinh viên ngành Cơ khí không?","expected_document_ids":[],"notes":"Không có tài liệu phù hợp trong corpus; phòng chống ảo giác."}
+// ==============================================================================
+// PHẦN 10: CÂU HỎI TƯ VẤN TUYỂN SINH DÀNH CHO HỌC SINH LỚP 10 (grade_10)
+// Bao gồm: Thông tin tuyển sinh, định hướng ngành học, tổ hợp xét tuyển, học phí, học bổng
+// ==============================================================================
+
+{"_category":"grade_10","question":"Học sinh lớp 10 muốn tìm hiểu về HaUI thì cần tra cứu những thông tin tuyển sinh cơ bản nào?","expected_document_ids":["01_admission_001","14_about_haui_001"],"notes":"Câu hỏi định hướng tìm hiểu tuyển sinh dành cho học sinh lớp 10."}
+{"_category":"grade_10","question":"HaUI có những ngành đào tạo nào phù hợp với học sinh yêu thích công nghệ và kỹ thuật?","expected_document_ids":["07_career_orientation_001","04_curriculum_001"],"notes":"Câu hỏi định hướng chọn ngành học."}
+{"_category":"grade_10","question":"Học sinh lớp 10 nên tìm hiểu những phương thức xét tuyển nào của HaUI để chuẩn bị cho kỳ tuyển sinh sau này?","expected_document_ids":["01_admission_004","01_admission_001"],"notes":"Câu hỏi tìm hiểu phương thức tuyển sinh."}
+{"_category":"grade_10","question":"Làm thế nào để tra cứu tổ hợp môn hoặc yêu cầu môn học phù hợp với ngành em quan tâm tại HaUI?","expected_document_ids":["01_admission_004","04_curriculum_001"],"notes":"Câu hỏi tra cứu tổ hợp xét tuyển."}
+{"_category":"grade_10","question":"Nếu muốn đăng ký vào một ngành kỹ thuật tại HaUI sau khi tốt nghiệp THPT, từ lớp 10 em nên chú ý chuẩn bị những gì theo thông tin tuyển sinh chính thức?","expected_document_ids":["01_admission_001","09_training_regulations_001"],"expected_year":2026,"notes":"Câu hỏi định hướng chuẩn bị tuyển sinh."}
+{"_category":"grade_10","question":"Em có thể tra cứu thông tin học phí của các chương trình tại HaUI ở đâu và cần chú ý những thông tin nào?","expected_document_ids":["05_tuition_scholarship_003","13_training_systems_001"],"notes":"Câu hỏi tìm hiểu học phí."}
+{"_category":"grade_10","question":"HaUI có công bố những thông tin nào về học bổng hoặc hỗ trợ người học để học sinh lớp 10 tham khảo?","expected_document_ids":["05_tuition_scholarship_001","12_student_support_001"],"notes":"Câu hỏi tìm hiểu học bổng và hỗ trợ sinh viên."}
+{"_category":"grade_10","question":"Làm sao để phân biệt thông tin tuyển sinh HaUI chính thức với thông tin tham khảo trên các trang khác?","expected_document_ids":["01_admission_001","14_about_haui_001"],"notes":"Câu hỏi xác định nguồn thông tin tuyển sinh chính thức."}
+
+
+// ==============================================================================
+// PHẦN 11: CÂU HỎI TƯ VẤN TUYỂN SINH DÀNH CHO HỌC SINH LỚP 11 (grade_11)
+// Bao gồm: Lựa chọn ngành học, phương thức xét tuyển, điểm chuẩn, học bổng, định hướng nghề nghiệp
+// ==============================================================================
+
+{"_category":"grade_11","question":"Em học lớp 11 và đang cân nhắc một số ngành tại HaUI; cần đối chiếu những thông tin nào trước khi chọn ngành?","expected_document_ids":["13_training_systems_001","07_career_orientation_001","01_admission_001"],"notes":"Câu hỏi định hướng chọn ngành."}
+{"_category":"grade_11","question":"Các phương thức xét tuyển HaUI được công bố gồm những gì, và mỗi phương thức có thông tin điều kiện riêng nào cần đọc kỹ?","expected_document_ids":["01_admission_004","09_training_regulations_001"],"expected_year":2026,"notes":"Câu hỏi tìm hiểu phương thức và điều kiện xét tuyển."}
+{"_category":"grade_11","question":"Nếu em quan tâm ngành công nghệ thông tin, cần tra cứu ở đâu để biết tổ hợp xét tuyển được áp dụng trong năm tuyển sinh cụ thể?","expected_document_ids":["01_admission_004","07_career_orientation_006"],"expected_year":2026,"notes":"Câu hỏi tra cứu tổ hợp xét tuyển ngành Công nghệ thông tin."}
+{"_category":"grade_11","question":"Em muốn xem điểm chuẩn các năm trước của một ngành tại HaUI thì cần xác định những yếu tố nào để so sánh cho đúng?","expected_document_ids":["03_cutoff_scores_001","03_cutoff_scores_004"],"notes":"Câu hỏi tra cứu và so sánh điểm chuẩn."}
+{"_category":"grade_11","question":"Những điều kiện chung và điều kiện riêng nào có thể ảnh hưởng đến việc đăng ký xét tuyển vào HaUI?","expected_document_ids":["01_admission_001","09_training_regulations_001"],"expected_year":2026,"notes":"Câu hỏi tìm hiểu điều kiện xét tuyển."}
+{"_category":"grade_11","question":"Sinh viên HaUI có thể tìm hiểu thông tin học bổng và chính sách hỗ trợ tài chính ở đâu trước khi lựa chọn trường?","expected_document_ids":["05_tuition_scholarship_001","12_student_support_001"],"notes":"Câu hỏi tìm hiểu học bổng và hỗ trợ tài chính."}
+{"_category":"grade_11","question":"Nếu chưa biết mình phù hợp với ngành nào, em có thể tham khảo những thông tin định hướng nghề nghiệp nào của HaUI?","expected_document_ids":["07_career_orientation_001","13_training_systems_001"],"notes":"Câu hỏi định hướng nghề nghiệp."}
+{"_category":"grade_11","question":"Em cần theo dõi những mốc thời gian và thông báo nào để không bỏ lỡ đợt đăng ký xét tuyển vào HaUI?","expected_document_ids":["01_admission_001","08_enrollment_procedure_001"],"expected_year":2026,"notes":"Câu hỏi tìm hiểu thời gian và quy trình đăng ký."}
+
+
+// ==============================================================================
+// PHẦN 12: CÂU HỎI TƯ VẤN TUYỂN SINH DÀNH CHO HỌC SINH LỚP 12 (grade_12)
+// Bao gồm: Phương thức xét tuyển, điểm chuẩn, điều kiện xét tuyển, hồ sơ, học phí, học bổng, nhập học
+// ==============================================================================
+
+{"_category":"grade_12","question":"Năm tuyển sinh em dự định đăng ký, HaUI áp dụng những phương thức xét tuyển nào và tài liệu nào xác nhận thông tin đó?","expected_document_ids":["01_admission_004","01_admission_001"],"expected_year":2026,"notes":"Câu hỏi tuyển sinh dành cho học sinh lớp 12."}
+{"_category":"grade_12","question":"Tra cứu điểm chuẩn ngành em chọn trong năm gần nhất cần lọc theo những thông tin nào để không nhầm giữa các phương thức?","expected_document_ids":["03_cutoff_scores_001","03_cutoff_scores_004"],"notes":"Câu hỏi tra cứu điểm chuẩn."}
+{"_category":"grade_12","question":"Điều kiện đăng ký xét tuyển vào ngành em quan tâm tại HaUI trong năm tuyển sinh hiện tại là gì?","expected_document_ids":["01_admission_001","09_training_regulations_001"],"expected_year":2026,"notes":"Câu hỏi tìm hiểu điều kiện xét tuyển."}
+{"_category":"grade_12","question":"Với ngành em muốn đăng ký, tổ hợp xét tuyển và các môn tương ứng được công bố ở đâu?","expected_document_ids":["01_admission_004","04_curriculum_001"],"expected_year":2026,"notes":"Câu hỏi tra cứu tổ hợp xét tuyển."}
+{"_category":"grade_12","question":"Hồ sơ và thông tin thí sinh cần chuẩn bị khi đăng ký xét tuyển vào HaUI gồm những gì theo hướng dẫn chính thức?","expected_document_ids":["08_enrollment_procedure_001","08_enrollment_procedure_003"],"expected_year":2026,"notes":"Câu hỏi về hồ sơ đăng ký xét tuyển."}
+{"_category":"grade_12","question":"Em muốn biết học phí dự kiến khi theo học ngành đã chọn tại HaUI thì cần tra cứu thông tin nào?","expected_document_ids":["05_tuition_scholarship_003","13_training_systems_001"],"notes":"Câu hỏi tìm hiểu học phí."}
+{"_category":"grade_12","question":"Thí sinh có thể tìm thông tin về học bổng và các chính sách hỗ trợ sinh viên HaUI ở đâu?","expected_document_ids":["05_tuition_scholarship_001","12_student_support_001"],"notes":"Câu hỏi tìm hiểu học bổng và hỗ trợ sinh viên."}
+{"_category":"grade_12","question":"Sau khi đăng ký xét tuyển, thí sinh cần thực hiện những bước nào tiếp theo theo hướng dẫn nhập học của HaUI?","expected_document_ids":["08_enrollment_procedure_001","08_enrollment_procedure_003"],"expected_year":2026,"notes":"Câu hỏi về các bước sau đăng ký xét tuyển."}
