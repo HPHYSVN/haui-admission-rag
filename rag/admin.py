@@ -14,9 +14,10 @@ from rag.config import (
     DEFAULT_VECTOR_INDEX_DIR,
     ROOT_DIR,
 )
-from rag.document_workflow import get_state, review_document, set_state
+from rag.document_workflow import DEFAULT_STATE_FILE, get_state, review_document, set_state
 from rag.embeddings import VectorIndex
-from rag.pipeline import RAGPipeline, VLLMChatClient, load_chunks
+from rag.factory import build_pipeline
+from rag.pipeline import load_chunks
 
 DEFAULT_DOCUMENTS_DIR = ROOT_DIR / "data" / "documents"
 DEFAULT_REVIEW_DIR = ROOT_DIR / "data" / "review"
@@ -99,6 +100,38 @@ def main(argv: list[str] | None = None) -> int:
     query.add_argument("--chunks-dir", type=Path, default=DEFAULT_CHUNKS_DIR)
     query.add_argument("--index-dir", type=Path, default=DEFAULT_VECTOR_INDEX_DIR)
     query.add_argument("--show-context", action="store_true")
+
+    ingest = commands.add_parser(
+        "ingest",
+        help="Import a reviewed-source record from a local file or public URL",
+    )
+    ingest.add_argument("--source", required=True, help="Local file path or http(s) URL")
+    ingest.add_argument("--category", required=True)
+    ingest.add_argument("--title")
+    ingest.add_argument("--year", type=int)
+    ingest.add_argument("--published-date")
+    ingest.add_argument("--effective-date")
+    ingest.add_argument("--document-number")
+    ingest.add_argument("--document-type")
+    ingest.add_argument("--subcategory")
+    ingest.add_argument("--authority")
+    ingest.add_argument("--status", choices=["active", "archived", "draft"], default="active")
+    ingest.add_argument("--update", dest="update_id", metavar="DOCUMENT_ID")
+    ingest.add_argument("--duplicate", choices=["error", "update"], default="error")
+    ingest.add_argument(
+        "--review",
+        choices=["pending", "approve", "reject"],
+        default="pending",
+        help="Workflow decision to record; approval is still an explicit human action",
+    )
+    ingest.add_argument("--documents-dir", type=Path, default=DEFAULT_DOCUMENTS_DIR)
+    ingest.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
+    ingest.add_argument(
+        "--allow-root",
+        type=Path,
+        help="Reject local sources outside this directory",
+    )
+    ingest.add_argument("--dry-run", action="store_true")
 
     args = parser.parse_args(argv)
     try:
@@ -204,11 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "query":
             if args.top_k < 1:
                 raise ValueError("top_k must be at least 1")
-            pipeline = RAGPipeline(
-                load_chunks(args.chunks_dir),
-                VLLMChatClient(),
-                index_dir=args.index_dir,
-            )
+            pipeline = build_pipeline(args.chunks_dir, args.index_dir)
             response = pipeline.ask(args.query, top_k=args.top_k)
             print(response.answer)
             print("\nNguồn:")
@@ -216,6 +245,51 @@ def main(argv: list[str] | None = None) -> int:
             if args.show_context:
                 for score, chunk_record in response.retrieved:
                     print(f"\n[{score:.3f}] {chunk_record['chunk_id']}\n{chunk_record['text']}")
+            return 0
+        if args.command == "ingest":
+            from rag.ingest import import_source
+
+            metadata = {
+                key: value
+                for key, value in {
+                    "title": args.title,
+                    "year": args.year,
+                    "published_date": args.published_date,
+                    "effective_date": args.effective_date,
+                    "document_number": args.document_number,
+                    "document_type": args.document_type,
+                    "subcategory": args.subcategory,
+                    "authority": args.authority,
+                    "status": args.status,
+                }.items()
+                if value not in (None, "")
+            }
+            result = import_source(
+                args.source,
+                category=args.category,
+                documents_dir=args.documents_dir,
+                state_file=args.state_file,
+                metadata=metadata,
+                update_id=args.update_id,
+                duplicate=args.duplicate,
+                review=args.review,
+                allowed_root=args.allow_root,
+                dry_run=args.dry_run,
+            )
+            print(json.dumps(
+                {
+                    "document_id": result.document["id"],
+                    "category": result.document["category"],
+                    "title": result.document["title"],
+                    "created": result.created,
+                    "duplicate_of": result.duplicate_of,
+                    "wrote": result.wrote,
+                    "path": str(result.path),
+                    "review": args.review,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ))
             return 0
     except (OSError, RuntimeError, ValueError) as exc:
         parser.exit(1, f"Workflow error: {exc}\n")

@@ -13,7 +13,8 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { askHaUI, ChatResponse, getHealth, Source } from "./lib/api";
+import { getHealth, Source, streamHaUI } from "./lib/api";
+import { MessageBody } from "./components/MessageBody";
 
 type Message = {
   id: string;
@@ -21,6 +22,7 @@ type Message = {
   content: string;
   sources?: Source[];
   failed?: boolean;
+  streaming?: boolean;
 };
 
 type ChatSession = {
@@ -90,9 +92,12 @@ function App() {
 
   useEffect(() => {
     if (!currentSessionId || !messages.length) return;
+    const persistable = messages.filter(
+      (message) => message.role === "user" || message.content || (message.sources?.length ?? 0) > 0,
+    );
     setSessions((current) => {
       const updated = current.map((session) =>
-        session.id === currentSessionId ? { ...session, messages, updatedAt: Date.now() } : session,
+        session.id === currentSessionId ? { ...session, messages: persistable, updatedAt: Date.now() } : session,
       );
       localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
       return updated;
@@ -128,28 +133,75 @@ function App() {
       });
       localStorage.setItem(CURRENT_SESSION_KEY, sessionId);
     }
-    setMessages((current) => [...current, userMessage]);
+    const assistantId = crypto.randomUUID();
+    setMessages((current) => [
+      ...current,
+      userMessage,
+      { id: assistantId, role: "assistant", content: "", streaming: true },
+    ]);
     const controller = new AbortController();
     abortRef.current = controller;
+    // Only the newest request may mutate the transcript. Aborting or starting a
+    // new chat detaches this controller, so late tokens cannot leak into it.
+    const isCurrent = () => abortRef.current === controller;
     try {
       const history = messages.map(({ role, content }) => ({ role, content }));
-      const result: ChatResponse = await askHaUI(trimmed, history, controller.signal);
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: result.answer,
-          sources: result.sources,
+      const result = await streamHaUI(trimmed, history, controller.signal, {
+        onToken: (token) => {
+          if (!isCurrent()) return;
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantId
+                ? { ...message, content: message.content + token }
+                : message,
+            ),
+          );
         },
-      ]);
+        onSources: (sources) => {
+          if (!isCurrent()) return;
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantId ? { ...message, sources } : message,
+            ),
+          );
+        },
+      });
+      if (!isCurrent()) return;
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? { ...message, content: result.answer, sources: result.sources, streaming: false }
+            : message,
+        ),
+      );
     } catch (requestError) {
-      if ((requestError as Error).name !== "AbortError") {
+      if (!isCurrent()) return;
+      if ((requestError as Error).name === "AbortError") {
+        // Keep whatever arrived before the user cancelled, but stop the caret.
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantId ? { ...message, streaming: false } : message,
+          ),
+        );
+      } else {
+        setMessages((current) => {
+          const target = current.find((message) => message.id === assistantId);
+          if (target && !target.content) {
+            return current.filter((message) => message.id !== assistantId);
+          }
+          return current.map((message) =>
+            message.id === assistantId
+              ? { ...message, streaming: false, failed: true }
+              : message,
+          );
+        });
         setError(requestError instanceof Error ? requestError.message : "Đã xảy ra lỗi.");
       }
     } finally {
-      abortRef.current = null;
-      setLoading(false);
+      if (isCurrent()) {
+        abortRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
@@ -285,9 +337,9 @@ function App() {
           ) : (
             <div className="messages">
               {messages.map((message) => (
-                <article className={`message ${message.role}`} key={message.id}>
+                <article className={`message ${message.role}${message.streaming ? " is-streaming" : ""}${message.failed ? " is-failed" : ""}`} key={message.id}>
                   <div className="message-label">{message.role === "user" ? "Bạn" : "HaUI Desk"}</div>
-                  <div className="message-body">{message.content}</div>
+                  <MessageBody content={message.content} />
                   {message.role === "assistant" && message.sources && message.sources.length > 0 && (
                     <SourceList sources={message.sources} />
                   )}
@@ -298,7 +350,7 @@ function App() {
                   )}
                 </article>
               ))}
-              {loading && (
+              {loading && !messages.some((message) => message.streaming && message.content) && (
                 <div className="processing" role="status">
                   <span /><span /><span /> Đang tra cứu tài liệu
                   <button className="cancel-button" type="button" onClick={() => abortRef.current?.abort()}>
@@ -312,7 +364,7 @@ function App() {
         </section>
 
         <div className="composer-wrap">
-          {error && <div className="error-banner" role="alert"><span>{error}</span><button onClick={() => void submit(messages.at(-1)?.content ?? "")}><RotateCcw size={14} /> Thử lại</button></div>}
+          {error && <div className="error-banner" role="alert"><span>{error}</span><button onClick={() => void submit([...messages].reverse().find((message) => message.role === "user")?.content ?? "")}><RotateCcw size={14} /> Thử lại</button></div>}
           <form className="composer" onSubmit={handleSubmit}>
             <textarea
               value={draft}

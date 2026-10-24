@@ -8,6 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_DOCUMENTS_DIR = ROOT_DIR / "data" / "documents"
 DEFAULT_CHUNKS_DIR = ROOT_DIR / "data" / "chunks" / "final"
 DEFAULT_PROPOSALS_DIR = ROOT_DIR / "data" / "chunks" / "proposals"
 DEFAULT_VECTOR_INDEX_DIR = ROOT_DIR / "data" / "indexes" / "vector"
@@ -20,6 +21,9 @@ DEFAULT_MIN_TERM_COVERAGE = 0.3
 DEFAULT_CONTEXT_TOKENS = 8192
 DEFAULT_MAX_OUTPUT_TOKENS = 800
 DEFAULT_CONTEXT_CHAR_BUDGET = 15000
+#: Embedding batch size. fastembed's default (256) can need ~8 GB for e5-large
+#: because of ONNX activation memory; 32 keeps the peak around 3 GB.
+DEFAULT_EMBED_BATCH_SIZE = 32
 DEFAULT_RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
 DEFAULT_RERANKER_CANDIDATES = 12
 DEFAULT_RERANKER_RETRIEVAL_WEIGHT = 4.0
@@ -29,6 +33,17 @@ load_dotenv(ROOT_DIR / ".env", override=False)
 
 def embedding_model_name() -> str:
     return os.getenv("RAG_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+
+
+def embedding_batch_size() -> int:
+    raw = os.getenv("RAG_EMBED_BATCH_SIZE", str(DEFAULT_EMBED_BATCH_SIZE))
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"RAG_EMBED_BATCH_SIZE must be an integer, got {raw!r}") from exc
+    if value < 1:
+        raise ValueError(f"RAG_EMBED_BATCH_SIZE must be at least 1, got {value}")
+    return value
 
 
 def retrieval_alpha() -> float:

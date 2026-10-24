@@ -221,6 +221,153 @@ class RetrievalMetadataTests(unittest.TestCase):
             self.assertEqual(retriever.search("space refund policy", top_k=3), [])
 
 
+class PipelineStreamingTests(unittest.TestCase):
+    @staticmethod
+    def _chunk(chunk_id: str, year: int, scope: str = "cycle", category: str = "03_cutoff_scores"):
+        return {
+            "chunk_id": chunk_id,
+            "document_id": f"doc-{chunk_id}",
+            "title": f"Tài liệu {chunk_id}",
+            "source_url": f"https://example.org/{chunk_id}",
+            "text": f"Nội dung {chunk_id}",
+            "year": year,
+            "category": category,
+            "eligibility_scope": scope,
+        }
+
+    def _pipeline(self, corpus, results, *, provider=None, chat_client=None):
+        with patch("rag.pipeline.HybridRetriever") as retriever_type:
+            retriever_type.return_value.search.return_value = results
+            return RAGPipeline(corpus, chat_client, provider=provider)
+
+    def test_2026_cutoff_question_abstains_when_only_2025_evidence_exists(self) -> None:
+        provider = Mock()
+        provider.name = "fake"
+        provider.model = "fake-model"
+        corpus = [self._chunk("current", 2026)]
+        old = self._chunk("old", 2025)
+        pipeline = self._pipeline(corpus, [(0.9, old)], provider=provider)
+
+        prepared = pipeline.prepare("Điểm chuẩn ngành Kỹ thuật phần mềm năm 2026")
+
+        self.assertIn("2026", prepared.direct_answer or "")
+        self.assertEqual(prepared.sources, [])
+        self.assertIsNone(prepared.messages)
+        self.assertEqual(list(pipeline.stream_prepared(prepared)), [prepared.direct_answer])
+        provider.complete.assert_not_called()
+        provider.stream.assert_not_called()
+
+    def test_explicit_historical_year_without_matching_evidence_abstains(self) -> None:
+        provider = Mock()
+        provider.name = "fake"
+        provider.model = "fake-model"
+        pipeline = self._pipeline(
+            [self._chunk("current", 2026)],
+            [(0.8, self._chunk("old", 2025))],
+            provider=provider,
+        )
+
+        prepared = pipeline.prepare("Điểm chuẩn năm 2019 ngành Kỹ thuật phần mềm")
+
+        self.assertEqual(prepared.target_year, 2019)
+        self.assertIn("2019", prepared.direct_answer or "")
+        self.assertEqual(prepared.sources, [])
+
+    def test_evergreen_question_can_use_old_but_relevant_material(self) -> None:
+        provider = Mock()
+        provider.name = "fake"
+        provider.model = "fake-model"
+        provider.stream.return_value = iter(["Ký túc xá ", "có chỗ gửi xe."])
+        old = self._chunk("dorm", 2019, scope="evergreen", category="10_dormitory_housing")
+        pipeline = self._pipeline([old], [(0.9, old)], provider=provider)
+
+        prepared = pipeline.prepare("Ký túc xá có chỗ gửi xe không?")
+
+        self.assertIsNone(prepared.target_year)
+        self.assertIsNone(prepared.direct_answer)
+        self.assertEqual(
+            "".join(pipeline.stream_prepared(prepared)),
+            "Ký túc xá có chỗ gửi xe.",
+        )
+        self.assertEqual([source["chunk_id"] for source in prepared.sources], ["dorm"])
+
+    def test_stream_forwards_each_provider_fragment_without_buffering(self) -> None:
+        class StreamingProvider:
+            name = "fake"
+            model = "fake-model"
+
+            def __init__(self) -> None:
+                self.produced: list[int] = []
+
+            def complete(self, messages):
+                raise AssertionError("streaming path must not call complete()")
+
+            def stream(self, messages):
+                self.produced.append(1)
+                yield "one"
+                self.produced.append(2)
+                yield "two"
+
+        chunk = self._chunk("current", 2026)
+        provider = StreamingProvider()
+        pipeline = self._pipeline([chunk], [(0.9, chunk)], provider=provider)
+        prepared = pipeline.prepare("Điểm chuẩn năm 2026")
+
+        iterator = pipeline.stream_prepared(prepared)
+        self.assertEqual(next(iterator), "one")
+        self.assertEqual(provider.produced, [1])
+        self.assertEqual(list(iterator), ["two"])
+        self.assertEqual(provider.produced, [1, 2])
+
+    def test_provider_without_stream_falls_back_to_one_complete_fragment(self) -> None:
+        class BlockingProvider:
+            name = "fake"
+            model = "fake-model"
+
+            def complete(self, messages):
+                return "toàn bộ câu trả lời"
+
+        chunk = self._chunk("current", 2026)
+        pipeline = self._pipeline([chunk], [(0.9, chunk)], provider=BlockingProvider())
+        prepared = pipeline.prepare("Điểm chuẩn năm 2026")
+
+        self.assertEqual(
+            list(pipeline.stream_prepared(prepared)),
+            ["toàn bộ câu trả lời"],
+        )
+
+    def test_legacy_chat_client_is_yielded_as_a_single_fragment(self) -> None:
+        client = Mock()
+        client.answer.return_value = "câu trả lời cũ"
+        chunk = self._chunk("current", 2026)
+        pipeline = self._pipeline([chunk], [(0.9, chunk)], chat_client=client)
+        prepared = pipeline.prepare("Điểm chuẩn năm 2026")
+
+        self.assertEqual(list(pipeline.stream_prepared(prepared)), ["câu trả lời cũ"])
+        client.answer.assert_called_once()
+
+    def test_provider_stream_errors_propagate_to_the_caller(self) -> None:
+        class FailingProvider:
+            name = "fake"
+            model = "fake-model"
+
+            def complete(self, messages):
+                return ""
+
+            def stream(self, messages):
+                yield "partial"
+                raise RuntimeError("provider dropped")
+
+        chunk = self._chunk("current", 2026)
+        pipeline = self._pipeline([chunk], [(0.9, chunk)], provider=FailingProvider())
+        prepared = pipeline.prepare("Điểm chuẩn năm 2026")
+
+        iterator = pipeline.stream_prepared(prepared)
+        self.assertEqual(next(iterator), "partial")
+        with self.assertRaisesRegex(RuntimeError, "provider dropped"):
+            next(iterator)
+
+
 class ChunkingTests(unittest.TestCase):
     def test_long_sentence_is_not_cut_at_arbitrary_character_limit(self) -> None:
         sentence = "Không cắt một câu dài vì đã tới ngưỡng ký tự"
@@ -1240,7 +1387,7 @@ class VLLMTests(unittest.TestCase):
             client = VLLMChatClient()
         self.assertEqual(client.model, DEFAULT_VLLM_MODEL)
 
-    @patch("rag.pipeline.requests.post")
+    @patch("rag.llm.openai_compatible.requests.Session.post")
     def test_sends_bearer_token_when_configured(self, post: Mock) -> None:
         post.return_value = Mock(
             status_code=200,
@@ -1253,7 +1400,7 @@ class VLLMTests(unittest.TestCase):
             "Bearer test-secret",
         )
 
-    @patch("rag.pipeline.requests.post")
+    @patch("rag.llm.openai_compatible.requests.Session.post")
     def test_calls_openai_compatible_chat_completion(self, post: Mock) -> None:
         post.return_value = Mock(
             status_code=200,
@@ -1265,7 +1412,7 @@ class VLLMTests(unittest.TestCase):
         self.assertEqual(post.call_args.args[0], "http://localhost:8000/v1/chat/completions")
         self.assertEqual(post.call_args.kwargs["json"]["max_tokens"], 800)
 
-    @patch("rag.pipeline.requests.post")
+    @patch("rag.llm.openai_compatible.requests.Session.post")
     def test_reports_vllm_http_error_details(self, post: Mock) -> None:
         response = Mock(status_code=400, text='{"error":"context length exceeded"}')
         response.raise_for_status.side_effect = requests.HTTPError(
