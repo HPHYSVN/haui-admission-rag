@@ -17,6 +17,7 @@ from rag.config import (
     retrieval_score_threshold,
 )
 from rag.embeddings import LocalEmbedder, VectorIndex
+from rag.eligibility import is_eligible, resolve_query_scope
 from rag.filters import matching_documents, query_filters, query_term_coverage
 from rag.reranker import CrossEncoderReranker
 
@@ -157,7 +158,23 @@ class HybridRetriever:
         query = query.strip()
         if not query:
             return []
-        candidates = matching_documents(self.documents, query_filters(query))
+        filters = query_filters(query)
+        if any("eligibility_scope" in document for document in self.documents):
+            scope = resolve_query_scope(query)
+            candidates = [
+                document
+                for document in self.documents
+                if (
+                    "category" not in filters
+                    or document.get("category") == filters["category"]
+                )
+                and is_eligible(document, scope)
+            ]
+        else:
+            # Synthetic corpora used by library consumers/tests may not have the
+            # curated eligibility segment. Preserve the historical strict filter
+            # for those rather than inferring current evidence.
+            candidates = matching_documents(self.documents, filters)
         if not candidates:
             return []
         self.semantic.index.ensure_current(self.documents)

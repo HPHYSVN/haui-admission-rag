@@ -30,6 +30,122 @@
 {"id":"03-06","dataset":"03","question":"Điểm xét tuyển sớm đại học HaUI năm 2024 được công bố như thế nào?","expected_document_ids":["03_cutoff_scores_005"],"expected_year":2024}
 {"id":"03-07","dataset":"03","question":"Điểm chuẩn đại học HaUI theo các phương thức năm 2023 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_007"],"expected_year":2023}
 {"id":"03-08","dataset":"03","question":"Điểm chuẩn trúng tuyển các phương thức xét tuyển đại học HaUI năm 2022 là bao nhiêu?","expected_document_ids":["03_cutoff_scores_009"],"expected_year":2022}
+{"id": "01-09", "dataset": "01", "question": "Năm 2025 HaUI xét tuyển thẳng theo quy định tại những thông tư nào?", "expected_document_ids": ["01_admission_006"], "expected_year": 2025}
+{"id": "01-10", "dataset": "01", "question": "Đề án tuyển sinh đại học HaUI năm 2024 có tổng chỉ tiêu bao nhiêu và phân bổ cho mấy phương thức?", "expected_document_ids": ["01_admission_007"], "expected_year": 2024}
+{"id": "02-09", "dataset": "02", "question": "Thông tư 06/2026/TT-BGDĐT có hiệu lực từ năm nào và thay thế những thông tư nào?", "expected_document_ids": ["02_ministry_regulations_001"], "expected_year": 2026}
+{"id": "02-10", "dataset": "02", "question": "Thông tư 34/2026/TT-BGDĐT được ban hành ngày nào và quy định nội dung gì?", "expected_document_ids": ["02_ministry_regulations_003"], "expected_year": 2026}
+{"id": "03-09", "dataset": "03", "question": "Điểm chuẩn ngành Công nghệ thông tin của HaUI năm 2026 là bao nhiêu?", "expected_document_ids": ["03_cutoff_scores_002"], "expected_year": 2026}
+{"id": "03-10", "dataset": "03", "question": "Điểm chuẩn ngành Kế toán của HaUI năm 2026 là bao nhiêu?", "expected_document_ids": ["03_cutoff_scores_002"], "expected_year": 2026}
+{"id": "04-01", "dataset": "04", "question": "Ngành Quản trị nhà hàng và dịch vụ ăn uống có thời gian đào tạo bao nhiêu năm?", "expected_document_ids": ["04_curriculum_001"], "expected_year": 2026}
+{"id": "04-02", "dataset": "04", "question": "Chương trình Quản trị nhà hàng và dịch vụ ăn uống có khối lượng kiến thức bao nhiêu tín chỉ?", "expected_document_ids": ["04_curriculum_001"], "expected_year": 2026}
+{"id": "04-03", "dataset": "04", "question": "Chương trình Công nghệ đa phương tiện có khối lượng kiến thức toàn khóa bao nhiêu tín chỉ?", "expected_document_ids": ["04_curriculum_002"], "expected_year": 2026}
+{"id": "04-04", "dataset": "04", "question": "Ngành Thiết kế cơ khí và kiểu dáng công nghiệp có thời gian đào tạo bao nhiêu năm?", "expected_document_ids": ["04_curriculum_003"], "expected_year": 2026}
+{"id": "04-05", "dataset": "04", "question": "Chương trình Thiết kế cơ khí và kiểu dáng công nghiệp có khối lượng kiến thức bao nhiêu tín chỉ?", "expected_document_ids": ["04_curriculum_003"], "expected_year": 2026}
+{"id": "04-06", "dataset": "04", "question": "Ngành Công nghệ kỹ thuật Cơ điện tử Ô tô do đơn vị nào quản lý chương trình?", "expected_document_ids": ["04_curriculum_004"], "expected_year": 2026}
+{"id": "04-07", "dataset": "04", "question": "Ngành Trung Quốc học có mã ngành đào tạo là gì?", "expected_document_ids": ["04_curriculum_005"], "expected_year": 2026}
+{"id": "04-08", "dataset": "04", "question": "Năm 2026 HaUI tuyển sinh bao nhiêu chương trình đào tạo đại học chính quy giảng dạy bằng Tiếng Anh?", "expected_document_ids": ["04_curriculum_006"], "expected_year": 2026}
+{"id": "04-09", "dataset": "04", "question": "Ngưỡng đầu vào năm 2026 của chương trình Vi mạch bán dẫn đối với Phương thức 3 là bao nhiêu?", "expected_document_ids": ["04_curriculum_007"], "expected_year": 2026}
+{"id": "04-10", "dataset": "04", "question": "Chương trình Vi mạch bán dẫn yêu cầu điểm thi tốt nghiệp THPT môn Toán tối thiểu bao nhiêu trong năm 2026?", "expected_document_ids": ["04_curriculum_007"], "expected_year": 2026}
+{"id": "05-01", "dataset": "05", "question": "Tổng kinh phí học bổng đầu vào dự kiến của HaUI năm 2026 là bao nhiêu?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-02", "dataset": "05", "question": "Học bổng đầu vào mức 1 của HaUI năm 2026 gồm những gì?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-03", "dataset": "05", "question": "Thí sinh cần đạt điểm xét tuyển tối thiểu bao nhiêu để được xét học bổng đầu vào mức 2 năm 2026?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-04", "dataset": "05", "question": "Học bổng đầu vào mức 2 của HaUI năm 2026 có bao nhiêu suất?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-05", "dataset": "05", "question": "Điều kiện và giá trị học bổng đầu vào mức 3 của HaUI năm 2026 là gì?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-06", "dataset": "05", "question": "Học bổng đầu vào mức 3 của HaUI năm 2026 có bao nhiêu suất?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-07", "dataset": "05", "question": "Thủ khoa nhóm ngành cần đạt bao nhiêu điểm xét tuyển để nhận học bổng mức 1 năm 2026?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-08", "dataset": "05", "question": "Học bổng đầu vào mức 1 dành cho chương trình đào tạo bằng Tiếng Anh năm 2026 có bao nhiêu suất?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-09", "dataset": "05", "question": "Học bổng mức 2 dành cho chương trình đào tạo bằng Tiếng Anh năm 2026 có giá trị và số suất như thế nào?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "05-10", "dataset": "05", "question": "Học bổng khuyến học Nguyễn Thanh Bình dành cho những sinh viên thuộc diện nào?", "expected_document_ids": ["05_tuition_scholarship_001"], "expected_year": 2026}
+{"id": "06-01", "dataset": "06", "question": "Sau khi tốt nghiệp ngành Công nghệ đa phương tiện, sinh viên có thể làm việc tại những lĩnh vực nào?", "expected_document_ids": ["06_career_002"], "expected_year": 2026}
+{"id": "06-02", "dataset": "06", "question": "Ngành Công nghệ đa phương tiện có thời gian đào tạo bao nhiêu năm?", "expected_document_ids": ["06_career_002"], "expected_year": 2026}
+{"id": "06-03", "dataset": "06", "question": "Chương trình Công nghệ đa phương tiện có khối lượng kiến thức bao nhiêu tín chỉ?", "expected_document_ids": ["06_career_002"], "expected_year": 2026}
+{"id": "06-04", "dataset": "06", "question": "Người tốt nghiệp Công nghệ đa phương tiện có thể làm việc tại bộ phận truyền thông của những tổ chức nào?", "expected_document_ids": ["06_career_002"], "expected_year": 2026}
+{"id": "06-05", "dataset": "06", "question": "Sau khi tốt nghiệp ngành Thiết kế cơ khí và kiểu dáng công nghiệp, sinh viên có thể đảm nhận những công việc nào?", "expected_document_ids": ["06_career_004"], "expected_year": 2026}
+{"id": "06-06", "dataset": "06", "question": "Người tốt nghiệp ngành Thiết kế cơ khí và kiểu dáng công nghiệp có thể giảng dạy tại đâu?", "expected_document_ids": ["06_career_004"], "expected_year": 2026}
+{"id": "06-07", "dataset": "06", "question": "Chương trình Thiết kế cơ khí và kiểu dáng công nghiệp có khối lượng giáo dục toàn khóa bao nhiêu tín chỉ?", "expected_document_ids": ["06_career_004"], "expected_year": 2026}
+{"id": "06-08", "dataset": "06", "question": "Ngành Thiết kế cơ khí và kiểu dáng công nghiệp do đơn vị nào quản lý?", "expected_document_ids": ["06_career_004"], "expected_year": 2026}
+{"id": "06-09", "dataset": "06", "question": "Sau khi tốt nghiệp ngành Quản trị nhà hàng và dịch vụ ăn uống, sinh viên có thể đảm nhận những vị trí công tác nào?", "expected_document_ids": ["06_career_005"], "expected_year": 2026}
+{"id": "06-10", "dataset": "06", "question": "Người tốt nghiệp ngành Quản trị nhà hàng và dịch vụ ăn uống có thể làm giảng viên, nghiên cứu viên tại đâu?", "expected_document_ids": ["06_career_005"], "expected_year": 2026}
+{"id": "07-01", "dataset": "07", "question": "Chương trình Công nghệ thông tin của HaUI có mã CTĐT là gì?", "expected_document_ids": ["07_career_orientation_006"], "expected_year": 2026}
+{"id": "07-02", "dataset": "07", "question": "Chương trình Khoa học máy tính của HaUI được tổ chức nào công nhận đạt kiểm định quốc tế và vào năm nào?", "expected_document_ids": ["07_career_orientation_007"], "expected_year": 2026}
+{"id": "07-03", "dataset": "07", "question": "Chương trình Kỹ thuật phần mềm của HaUI có mã CTĐT là gì?", "expected_document_ids": ["07_career_orientation_008"], "expected_year": 2026}
+{"id": "07-04", "dataset": "07", "question": "Chương trình Hệ thống thông tin của HaUI có mã CTĐT là gì?", "expected_document_ids": ["07_career_orientation_009"], "expected_year": 2026}
+{"id": "07-05", "dataset": "07", "question": "Chương trình An toàn thông tin của HaUI có mã CTĐT là gì?", "expected_document_ids": ["07_career_orientation_010"], "expected_year": 2026}
+{"id": "07-06", "dataset": "07", "question": "Chương trình Công nghệ kỹ thuật Cơ khí của HaUI đạt chứng nhận kiểm định nào?", "expected_document_ids": ["07_career_orientation_012"], "expected_year": 2026}
+{"id": "07-07", "dataset": "07", "question": "Sau khi tốt nghiệp ngành Công nghệ kỹ thuật khuôn mẫu, sinh viên có thể giảng dạy và nghiên cứu ở đâu?", "expected_document_ids": ["07_career_orientation_013"], "expected_year": 2026}
+{"id": "07-08", "dataset": "07", "question": "Mục tiêu PEO 1 của chương trình Robot và Trí tuệ nhân tạo là gì?", "expected_document_ids": ["07_career_orientation_014"], "expected_year": 2026}
+{"id": "07-09", "dataset": "07", "question": "Người tốt nghiệp ngành Thiết kế cơ khí và kiểu dáng công nghiệp có thể làm chuyên gia tại những bộ phận nào của doanh nghiệp?", "expected_document_ids": ["07_career_orientation_015"], "expected_year": 2026}
+{"id": "07-10", "dataset": "07", "question": "Người tốt nghiệp ngành Kỹ thuật Ô tô và Năng lượng mới có thể làm việc trong những lĩnh vực nào?", "expected_document_ids": ["07_career_orientation_019"], "expected_year": 2026}
+{"id": "08-01", "dataset": "08", "question": "Hệ thống đăng ký xét tuyển đại học chính quy đợt 2 năm 2026 của HaUI mở từ ngày nào đến ngày nào?", "expected_document_ids": ["08_enrollment_procedure_001"], "expected_year": 2026}
+{"id": "08-02", "dataset": "08", "question": "Thí sinh đăng ký xét tuyển đại học chính quy đợt 2 năm 2026 của HaUI tại website nào?", "expected_document_ids": ["08_enrollment_procedure_001"], "expected_year": 2026}
+{"id": "08-03", "dataset": "08", "question": "Hồ sơ chuẩn bị đăng ký xét tuyển đại học chính quy đợt 2 năm 2026 gồm những ảnh giấy tờ nào?", "expected_document_ids": ["08_enrollment_procedure_001"], "expected_year": 2026}
+{"id": "08-04", "dataset": "08", "question": "Thí sinh nộp lệ phí xét tuyển đại học chính quy đợt 2 năm 2026 qua ngân hàng nào?", "expected_document_ids": ["08_enrollment_procedure_001"], "expected_year": 2026}
+{"id": "08-05", "dataset": "08", "question": "Hệ thống đăng ký dự tuyển đại học chính quy năm 2026 của HaUI mở từ ngày nào đến ngày nào?", "expected_document_ids": ["08_enrollment_procedure_003"], "expected_year": 2026}
+{"id": "08-06", "dataset": "08", "question": "Các phương thức 2, 4, 5 trong hướng dẫn đăng ký dự tuyển đại học chính quy năm 2026 áp dụng cho đối tượng nào?", "expected_document_ids": ["08_enrollment_procedure_003"], "expected_year": 2026}
+{"id": "08-07", "dataset": "08", "question": "Tân sinh viên nhập học trực tuyến năm 2026 tại website nào?", "expected_document_ids": ["08_enrollment_procedure_002"], "expected_year": 2026}
+{"id": "08-08", "dataset": "08", "question": "Hồ sơ sinh viên nhập học năm 2026 gồm những giấy tờ chính nào?", "expected_document_ids": ["08_enrollment_procedure_002"], "expected_year": 2026}
+{"id": "08-09", "dataset": "08", "question": "Năm học 2026-2027, HaUI mở thẻ sinh viên tích hợp với ngân hàng nào?", "expected_document_ids": ["08_enrollment_procedure_002"], "expected_year": 2026}
+{"id": "08-10", "dataset": "08", "question": "Thời hạn chuyển hồ sơ sinh hoạt Đảng tối đa là bao nhiêu ngày?", "expected_document_ids": ["08_enrollment_procedure_002"], "expected_year": 2026}
+{"id": "09-01", "dataset": "09", "question": "Thông tư 06/2026/TT-BGDĐT thay thế những thông tư nào?", "expected_document_ids": ["09_training_regulations_001"], "expected_year": 2026}
+{"id": "09-02", "dataset": "09", "question": "Thông tư 06/2026/TT-BGDĐT áp dụng cho những trình độ đào tạo nào?", "expected_document_ids": ["09_training_regulations_001"], "expected_year": 2026}
+{"id": "09-03", "dataset": "09", "question": "Quy chế tuyển sinh đại học của HaUI năm 2023 được ban hành kèm theo quyết định nào?", "expected_document_ids": ["09_training_regulations_002"], "expected_year": 2023}
+{"id": "09-04", "dataset": "09", "question": "Quy chế tuyển sinh đại học HaUI năm 2023 áp dụng cho những hình thức đào tạo nào?", "expected_document_ids": ["09_training_regulations_002"], "expected_year": 2023}
+{"id": "09-05", "dataset": "09", "question": "Thời gian tối đa để sinh viên hoàn thành khóa học hệ 4 năm là bao lâu?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "09-06", "dataset": "09", "question": "Sinh viên được đăng ký tối thiểu và tối đa bao nhiêu tín chỉ trong mỗi học kỳ chính?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "09-07", "dataset": "09", "question": "Sinh viên được phép rút học phần đã đăng ký trong thời hạn bao lâu mà không bị ghi điểm F?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "09-08", "dataset": "09", "question": "Điểm A trong thang điểm 4 tương ứng với khoảng điểm nào và mức điểm số nào?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "09-09", "dataset": "09", "question": "Sinh viên năm thứ nhất bị cảnh báo học vụ khi điểm trung bình chung tích lũy dưới mức nào?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "09-10", "dataset": "09", "question": "Sinh viên bị buộc thôi học trong những trường hợp nào theo quy chế đào tạo?", "expected_document_ids": ["09_training_regulations_003"], "expected_year": 2026}
+{"id": "10-01", "dataset": "10", "question": "Quy trình sinh viên đăng ký vào ở ký túc xá gồm mấy bước?", "expected_document_ids": ["10_dormitory_housing_001"], "expected_year": null}
+{"id": "10-02", "dataset": "10", "question": "Bước 1 của quy trình đăng ký ký túc xá cần chuẩn bị những giấy tờ gì?", "expected_document_ids": ["10_dormitory_housing_001"], "expected_year": null}
+{"id": "10-03", "dataset": "10", "question": "Tân sinh viên năm học 2026-2027 đăng ký phòng ở ký túc xá trực tuyến qua đâu?", "expected_document_ids": ["10_dormitory_housing_004"], "expected_year": 2026}
+{"id": "10-04", "dataset": "10", "question": "Hotline của Trung tâm Ký túc xá HaUI là số nào?", "expected_document_ids": ["10_dormitory_housing_004"], "expected_year": 2026}
+{"id": "10-05", "dataset": "10", "question": "Ký túc xá Cơ sở 3 - Khu C có tổng bao nhiêu phòng và đáp ứng bao nhiêu chỗ ở?", "expected_document_ids": ["10_dormitory_housing_005"], "expected_year": null}
+{"id": "10-06", "dataset": "10", "question": "Ký túc xá Cơ sở 3 - Khu C gồm những nhà nào?", "expected_document_ids": ["10_dormitory_housing_005"], "expected_year": null}
+{"id": "10-07", "dataset": "10", "question": "Thời gian mở cổng đăng ký ký túc xá trực tuyến cho tân sinh viên năm học 2026-2027 là khi nào?", "expected_document_ids": ["10_dormitory_housing_012"], "expected_year": 2026}
+{"id": "10-08", "dataset": "10", "question": "Thời gian thông báo nhận phòng ký túc xá qua SMS cho tân sinh viên năm học 2026-2027 là khi nào?", "expected_document_ids": ["10_dormitory_housing_012"], "expected_year": 2026}
+{"id": "10-09", "dataset": "10", "question": "Thời gian nhận phòng ký túc xá của tân sinh viên năm học 2026-2027 là khi nào?", "expected_document_ids": ["10_dormitory_housing_012"], "expected_year": 2026}
+{"id": "10-10", "dataset": "10", "question": "Từ ngày nào Ký túc xá HaUI bắt đầu đón tân sinh viên nhận phòng tại Cơ sở 3 Ninh Bình?", "expected_document_ids": ["10_dormitory_housing_009"], "expected_year": 2026}
+{"id": "11-01", "dataset": "11", "question": "Trường Ngoại ngữ - Du lịch có những câu lạc bộ tiếng Anh nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-02", "dataset": "11", "question": "Câu lạc bộ Tiếng Trung của Trường Ngoại ngữ - Du lịch có tên là gì?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-03", "dataset": "11", "question": "Trường Điện - Điện tử có câu lạc bộ Robocon nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-04", "dataset": "11", "question": "Trường Cơ khí - Ô tô có hội sử dụng phần mềm CAD/CAM/CAE nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-05", "dataset": "11", "question": "Trường Kinh tế có câu lạc bộ Logistics và Chuỗi cung ứng nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-06", "dataset": "11", "question": "Trường Công nghệ Thông tin và Truyền thông có câu lạc bộ thể thao điện tử nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-07", "dataset": "11", "question": "Hội Sinh viên trường có câu lạc bộ bóng đá nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-08", "dataset": "11", "question": "Hội Sinh viên trường có những câu lạc bộ hiến máu nào?", "expected_document_ids": ["11_student_life_001"], "expected_year": null}
+{"id": "11-09", "dataset": "11", "question": "Đoàn TNCS Hồ Chí Minh trường Đại học Công nghiệp Hà Nội trực thuộc tổ chức nào?", "expected_document_ids": ["11_student_life_003"], "expected_year": null}
+{"id": "11-10", "dataset": "11", "question": "Ban Chấp hành Đoàn trường Đại học Công nghiệp Hà Nội có bao nhiêu đồng chí?", "expected_document_ids": ["11_student_life_003"], "expected_year": null}
+{"id": "12-01", "dataset": "12", "question": "Trung tâm Hỗ trợ sinh viên HaUI được thành lập ngày nào?", "expected_document_ids": ["12_student_support_001"], "expected_year": null}
+{"id": "12-02", "dataset": "12", "question": "Trung tâm Hỗ trợ sinh viên HaUI được thành lập theo quyết định nào?", "expected_document_ids": ["12_student_support_001"], "expected_year": null}
+{"id": "12-03", "dataset": "12", "question": "Trung tâm Quản lý Ký túc xá được đổi tên thành Trung tâm Hỗ trợ sinh viên theo quyết định nào?", "expected_document_ids": ["12_student_support_001"], "expected_year": null}
+{"id": "12-04", "dataset": "12", "question": "Tên giao dịch tiếng Anh của Trung tâm Hỗ trợ sinh viên HaUI là gì?", "expected_document_ids": ["12_student_support_001"], "expected_year": null}
+{"id": "12-05", "dataset": "12", "question": "Văn phòng Trung tâm Hỗ trợ sinh viên tại Cơ sở 1 nằm ở đâu?", "expected_document_ids": ["12_student_support_002"], "expected_year": null}
+{"id": "12-06", "dataset": "12", "question": "Số điện thoại của Trung tâm Hỗ trợ sinh viên tại Cơ sở 1 là gì?", "expected_document_ids": ["12_student_support_002"], "expected_year": null}
+{"id": "12-07", "dataset": "12", "question": "Văn phòng và số điện thoại của Trung tâm Hỗ trợ sinh viên tại Cơ sở 2 là gì?", "expected_document_ids": ["12_student_support_002"], "expected_year": null}
+{"id": "12-08", "dataset": "12", "question": "Văn phòng và số điện thoại của Trung tâm Hỗ trợ sinh viên tại Cơ sở 3 là gì?", "expected_document_ids": ["12_student_support_002"], "expected_year": null}
+{"id": "12-09", "dataset": "12", "question": "Năm 2022, Đại học Công nghiệp Hà Nội có bao nhiêu sinh viên khuyết tật đang học tập?", "expected_document_ids": ["12_student_support_003"], "expected_year": 2022}
+{"id": "12-10", "dataset": "12", "question": "Ngày Người khuyết tật Việt Nam được tổ chức vào ngày nào?", "expected_document_ids": ["12_student_support_003"], "expected_year": 2022}
+{"id": "13-01", "dataset": "13", "question": "Hiện tại Đại học Công nghiệp Hà Nội cung cấp bao nhiêu ngành, chương trình đào tạo hệ đại học chính quy?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-02", "dataset": "13", "question": "Các chương trình đào tạo của HaUI được xây dựng theo chuẩn quốc tế nào?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-03", "dataset": "13", "question": "HaUI hướng tới kiểm định chương trình đào tạo theo chuẩn nào của Hoa Kỳ?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-04", "dataset": "13", "question": "Ngành Vi mạch bán dẫn thuộc đơn vị nào của HaUI?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-05", "dataset": "13", "question": "Ngành Công nghệ đa phương tiện thuộc đơn vị nào của HaUI?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-06", "dataset": "13", "question": "Trường Ngoại ngữ - Du lịch quản lý những ngành đào tạo đại học nào?", "expected_document_ids": ["13_training_systems_001"], "expected_year": null}
+{"id": "13-07", "dataset": "13", "question": "HaUI cung cấp bao nhiêu chương trình đào tạo trình độ Tiến sĩ?", "expected_document_ids": ["13_training_systems_002"], "expected_year": null}
+{"id": "13-08", "dataset": "13", "question": "HaUI cung cấp bao nhiêu chương trình đào tạo trình độ Thạc sĩ?", "expected_document_ids": ["13_training_systems_002"], "expected_year": null}
+{"id": "13-09", "dataset": "13", "question": "Chương trình đào tạo Tiến sĩ ngành Kỹ thuật cơ khí thuộc đơn vị nào?", "expected_document_ids": ["13_training_systems_002"], "expected_year": null}
+{"id": "13-10", "dataset": "13", "question": "Chương trình đào tạo Thạc sĩ ngành Quản trị dịch vụ du lịch và lữ hành thuộc đơn vị nào?", "expected_document_ids": ["13_training_systems_002"], "expected_year": null}
+{"id": "14-01", "dataset": "14", "question": "Đại học Công nghiệp Hà Nội trực thuộc Bộ nào?", "expected_document_ids": ["14_about_haui_001"], "expected_year": 2025}
+{"id": "14-02", "dataset": "14", "question": "Hai trường tiền thân của Đại học Công nghiệp Hà Nội được thành lập năm nào?", "expected_document_ids": ["14_about_haui_002"], "expected_year": null}
+{"id": "14-03", "dataset": "14", "question": "Đại học Công nghiệp Hà Nội có bao nhiêu cơ sở đào tạo và tổng diện tích gần bao nhiêu?", "expected_document_ids": ["14_about_haui_003"], "expected_year": null}
+{"id": "14-04", "dataset": "14", "question": "Cơ sở 1 của Đại học Công nghiệp Hà Nội nằm ở địa chỉ nào?", "expected_document_ids": ["14_about_haui_003"], "expected_year": null}
+{"id": "14-05", "dataset": "14", "question": "Cơ sở 3 của Đại học Công nghiệp Hà Nội nằm ở đâu?", "expected_document_ids": ["14_about_haui_003"], "expected_year": null}
+{"id": "14-06", "dataset": "14", "question": "Thư viện Đại học Công nghiệp Hà Nội có gần bao nhiêu đầu sách?", "expected_document_ids": ["14_about_haui_003"], "expected_year": null}
+{"id": "14-07", "dataset": "14", "question": "Ký túc xá Đại học Công nghiệp Hà Nội có hơn bao nhiêu phòng ở?", "expected_document_ids": ["14_about_haui_003"], "expected_year": null}
+{"id": "14-08", "dataset": "14", "question": "Chủ tịch Hồ Chí Minh đã về thăm trường bao nhiêu lần và vào những năm nào?", "expected_document_ids": ["14_about_haui_004"], "expected_year": null}
+{"id": "14-09", "dataset": "14", "question": "Đại học Công nghiệp Hà Nội được trao Huân chương Hồ Chí Minh năm nào?", "expected_document_ids": ["14_about_haui_004"], "expected_year": null}
+{"id": "14-10", "dataset": "14", "question": "Đại học Công nghiệp Hà Nội được phong tặng danh hiệu Đơn vị Anh hùng Lao động thời kỳ đổi mới năm nào?", "expected_document_ids": ["14_about_haui_004"], "expected_year": null}
 
 // ==============================================================================
 // PHẦN 8: THỦ TỤC ĐĂNG KÝ XÉT TUYỂN & QUY TRÌNH NHẬP HỌC (08_enrollment_procedure)

@@ -75,6 +75,9 @@ h1 em { color: var(--gold-soft); font-family: Georgia, serif; font-weight: 400; 
 .message-label { color: var(--gold); margin-bottom: 9px; }
 .message.user .message-label { text-align: right; color: var(--muted); }
 .message-body { white-space: pre-wrap; font-size: 15px; line-height: 1.72; color: var(--ink); }
+.message.is-streaming .message-body::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--gold); animation: caret-blink 1s step-end infinite; }
+.message.is-failed .message-body { color: var(--muted); }
+@keyframes caret-blink { 50% { opacity: 0; } }
 .message.user .message-body { padding: 15px 17px; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 5px 5px 0 5px; color: #e8e5dd; }
 .sources { margin-top: 23px; padding: 16px; background: rgba(37, 39, 35, .66); border: 1px solid var(--line); border-left: 2px solid var(--gold); }
 .sources-heading { display: flex; align-items: center; gap: 7px; color: var(--gold-soft); margin-bottom: 11px; }

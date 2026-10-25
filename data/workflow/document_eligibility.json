@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "default_year": 2026,
+  "description": "Reviewed eligibility policy for the HaUI admission corpus. Scope defaults keep older cycles in the corpus for explicit historical questions; per-document overrides quarantine drafts and record effective-date rules for regulations. This file never replaces corpus review state.",
+  "defaults": {
+    "01_admission": {
+      "scope": "cycle",
+      "note": "Admission projects and notices are valid for their own admission year."
+    },
+    "02_ministry_regulations": {
+      "scope": "regulation",
+      "note": "Ministry regulations are valid only inside their effective-date range."
+    },
+    "03_cutoff_scores": {
+      "scope": "cycle",
+      "note": "Cutoff results answer only the year they were published for."
+    },
+    "04_curriculum": {
+      "scope": "cycle",
+      "note": "Curriculum pages describe the 2026 cohort and must not answer another year's curriculum question."
+    },
+    "05_tuition_scholarship": {
+      "scope": "cycle",
+      "note": "Tuition and scholarship amounts are cycle-specific."
+    },
+    "06_career": {
+      "scope": "evergreen",
+      "note": "Career and employer information is institutional context, not an admission-cycle fact."
+    },
+    "07_career_orientation": {
+      "scope": "evergreen",
+      "note": "Programme orientation pages describe stable career directions; old pages remain usable with their source year visible."
+    },
+    "08_enrollment_procedure": {
+      "scope": "cycle",
+      "note": "Enrollment instructions are cycle-specific."
+    },
+    "09_training_regulations": {
+      "scope": "regulation",
+      "note": "Training regulations are valid only inside their effective-date range."
+    },
+    "10_dormitory_housing": {
+      "scope": "evergreen",
+      "note": "Dormitory procedures, facilities, and contacts remain useful outside one admission cycle; dated 2026 notices carry their year in metadata."
+    },
+    "11_student_life": {
+      "scope": "evergreen",
+      "note": "Student clubs and youth-union information is evergreen."
+    },
+    "12_student_support": {
+      "scope": "evergreen",
+      "note": "Student support contacts and services are evergreen."
+    },
+    "13_training_systems": {
+      "scope": "evergreen",
+      "note": "Degree-system overview pages are evergreen; archived pages are retained for historical context."
+    },
+    "14_about_haui": {
+      "scope": "evergreen",
+      "note": "Institutional history, facilities, and awards are evergreen."
+    }
+  },
+  "documents": {
+    "01_admission_003": {
+      "scope": "cycle",
+      "year": 2026,
+      "note": "Content is the 2026 admission plan (72 programmes, 8,300 regular places). The imported published_date of 2023-06-12 is inconsistent with the content; eligibility uses 2026 and the metadata anomaly should be corrected at the source."
+    },
+    "01_admission_006": {
+      "scope": "cycle",
+      "year": 2025,
+      "note": "Active 2025 admission project retained for explicit 2025 questions only."
+    },
+    "01_admission_007": {
+      "scope": "cycle",
+      "year": 2024,
+      "note": "Archived 2024 admission project; historical evidence for 2024 only."
+    },
+    "01_admission_008": {
+      "scope": "cycle",
+      "year": 2023,
+      "note": "Archived 2023 admission project; historical evidence for 2023 only."
+    },
+    "01_admission_009": {
+      "scope": "cycle",
+      "year": 2022,
+      "note": "Archived 2022 admission project; historical evidence for 2022 only."
+    },
+    "01_admission_010": {
+      "scope": "cycle",
+      "year": 2021,
+      "note": "Archived 2021 admission project; historical evidence for 2021 only."
+    },
+    "01_admission_011": {
+      "scope": "cycle",
+      "year": 2020,
+      "note": "Archived 2020 admission project; historical evidence for 2020 only."
+    },
+    "01_admission_012": {
+      "scope": "cycle",
+      "year": 2019,
+      "note": "Archived 2019 admission project; historical evidence for 2019 only."
+    },
+    "02_ministry_regulations_001": {
+      "scope": "regulation",
+      "effective_from": "2026-02-15",
+      "note": "Thông tư 06/2026/TT-BGDĐT; effective 2026-02-15 and still in force."
+    },
+    "02_ministry_regulations_002": {
+      "scope": "quarantine",
+      "note": "Draft amendment (Dự thảo Thông tư). It is not issued law and must never be cited as a current regulation."
+    },
+    "02_ministry_regulations_003": {
+      "scope": "regulation",
+      "effective_from": "2026-04-19",
+      "note": "Thông tư 34/2026/TT-BGDĐT on enrolment capacity; effective 2026-04-19."
+    },
+    "03_cutoff_scores_001": {
+      "scope": "cycle",
+      "year": 2026,
+      "note": "2026 round-2 English-programme results."
+    },
+    "03_cutoff_scores_002": {
+      "scope": "cycle",
+      "year": 2026,
+      "note": "2026 regular-programme results, Notice 289/TB-ĐHCN."
+    },
+    "03_cutoff_scores_003": {
+      "scope": "cycle",
+      "year": 2026,
+      "note": "2026 English-programme results, Notice 290/TB-ĐHCN."
+    },
+    "03_cutoff_scores_004": {
+      "scope": "cycle",
+      "year": 2025,
+      "note": "Content is the 2025 regular-programme result. The imported published_date of 2022-06-06 is inconsistent with the content; eligibility uses 2025 and the metadata anomaly should be corrected at the source."
+    },
+    "03_cutoff_scores_005": {
+      "scope": "cycle",
+      "year": 2024,
+      "note": "Archived 2024 early-round results; historical evidence for 2024 only."
+    },
+    "03_cutoff_scores_006": {
+      "scope": "cycle",
+      "year": 2024,
+      "note": "Archived 2024 results; historical evidence for 2024 only."
+    },
+    "03_cutoff_scores_007": {
+      "scope": "cycle",
+      "year": 2023,
+      "note": "Archived 2023 results; historical evidence for 2023 only."
+    },
+    "03_cutoff_scores_008": {
+      "scope": "cycle",
+      "year": 2023,
+      "note": "Archived 2023 results; historical evidence for 2023 only."
+    },
+    "03_cutoff_scores_009": {
+      "scope": "cycle",
+      "year": 2022,
+      "note": "Archived 2022 results; historical evidence for 2022 only."
+    },
+    "09_training_regulations_001": {
+      "scope": "regulation",
+      "effective_from": "2026-03-10",
+      "note": "2026 HaUI admission regulation; effective 2026-03-10."
+    },
+    "09_training_regulations_002": {
+      "scope": "regulation",
+      "effective_from": "2023-04-13",
+      "effective_to": "2023-05-31",
+      "note": "Archived 2023 regulation, superseded on 2023-06-01. Historical evidence only."
+    },
+    "09_training_regulations_003": {
+      "scope": "regulation",
+      "effective_from": "2023-06-01",
+      "note": "HaUI undergraduate training regulation still in force; applies to 2026 questions about academic training (not admission cutoffs)."
+    },
+    "12_student_support_003": {
+      "scope": "evergreen",
+      "note": "Archived 2022 disability-support page; retained as historical/evergreen context with its source year visible."
+    },
+    "13_training_systems_001": {
+      "scope": "evergreen",
+      "note": "Archived overview of regular undergraduate programmes; retained for institutional context, not current admission facts."
+    },
+    "13_training_systems_002": {
+      "scope": "evergreen",
+      "note": "Archived overview of postgraduate programmes; retained for institutional context."
+    },
+    "14_about_haui_001": {
+      "scope": "evergreen",
+      "note": "Overview page carries a 2025 publication date but describes stable institutional facts."
+    }
+  }
+}

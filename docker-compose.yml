@@ -1,0 +1,65 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: haui-rag-backend:local
+    env_file:
+      - .env
+    environment:
+      # LLM_* is primary. host.docker.internal lets the container reach a vLLM or
+      # Ollama server running on the Docker host; override with DOCKER_LLM_BASE_URL.
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai_compatible}
+      LLM_BASE_URL: ${DOCKER_LLM_BASE_URL:-http://host.docker.internal:8000/v1}
+      LLM_MODEL: ${LLM_MODEL:-}
+      RAG_INDEX_DIR: /app/data/indexes/vector
+      HF_HOME: /cache/huggingface
+      # fastembed's ONNX files must be real files, not HF-cache symlinks, or
+      # onnxruntime rejects the external `model.onnx_data` file.
+      FASTEMBED_CACHE_PATH: /cache/huggingface/fastembed
+      HF_HUB_DISABLE_SYMLINKS: "1"
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-http://localhost:8080}
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    volumes:
+      # Generated indexes survive `docker compose down` / container recreation.
+      - indexes:/app/data/indexes
+      # fastembed/Hugging Face weights; avoids re-downloading on every start.
+      - hf_cache:/cache/huggingface
+    extra_hosts:
+      # Linux way to resolve the Docker host by name.
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/api/v1/ready', timeout=3).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    image: haui-rag-frontend:local
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  indexes:
+  hf_cache:

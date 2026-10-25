@@ -8,7 +8,11 @@ import math
 from pathlib import Path
 from typing import Any
 
-from rag.config import DEFAULT_VECTOR_INDEX_DIR, embedding_model_name
+from rag.config import (
+    DEFAULT_VECTOR_INDEX_DIR,
+    embedding_batch_size,
+    embedding_model_name,
+)
 
 INDEX_FILE = "vectors.jsonl"
 FAISS_INDEX_FILE = "vectors.faiss"
@@ -16,8 +20,9 @@ METADATA_FILE = "metadata.json"
 
 
 class LocalEmbedder:
-    def __init__(self, model_name: str | None = None):
+    def __init__(self, model_name: str | None = None, batch_size: int | None = None):
         self.model_name = model_name or embedding_model_name()
+        self.batch_size = batch_size or embedding_batch_size()
         try:
             from fastembed import TextEmbedding
         except ImportError as exc:
@@ -29,15 +34,19 @@ class LocalEmbedder:
             self._model = TextEmbedding(model_name=self.model_name)
         except Exception as exc:
             raise RuntimeError(
-                f"Could not load embedding model {self.model_name!r}. "
-                "Check network access for the first download or set RAG_EMBEDDING_MODEL."
+                f"Could not load embedding model {self.model_name!r}: {exc}. "
+                "Check network access for the first download, set RAG_EMBEDDING_MODEL, "
+                "or set HF_HUB_DISABLE_SYMLINKS=1 when the ONNX model uses external data."
             ) from exc
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
         try:
-            vectors = [vector.tolist() for vector in self._model.embed(texts)]
+            vectors = [
+                vector.tolist()
+                for vector in self._model.embed(texts, batch_size=self.batch_size)
+            ]
         except Exception as exc:
             raise RuntimeError(f"Embedding model {self.model_name!r} failed: {exc}") from exc
         if len(vectors) != len(texts):

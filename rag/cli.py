@@ -8,13 +8,8 @@ from pathlib import Path
 from typing import Callable
 
 from rag.config import DEFAULT_TOP_K, DEFAULT_VECTOR_INDEX_DIR
-from rag.pipeline import (
-    DEFAULT_CHUNKS_DIR,
-    RAGPipeline,
-    RAGResponse,
-    VLLMChatClient,
-    load_chunks,
-)
+from rag.factory import build_pipeline
+from rag.pipeline import DEFAULT_CHUNKS_DIR, RAGPipeline, RAGResponse
 
 
 WORKFLOW_COMMANDS = {
@@ -104,11 +99,7 @@ def _chat_main(argv: list[str] | None = None) -> int:
     if args.top_k < 1:
         parser.error("--top-k must be at least 1")
     try:
-        pipeline = RAGPipeline(
-            load_chunks(args.chunks_dir),
-            VLLMChatClient(),
-            index_dir=args.index_dir,
-        )
+        pipeline = build_pipeline(args.chunks_dir, args.index_dir)
         return _chat_loop(
             pipeline,
             top_k=args.top_k,
@@ -130,7 +121,7 @@ def _legacy_main(argv: list[str] | None = None) -> int:
         parser.error("--top-k must be at least 1")
 
     try:
-        pipeline = RAGPipeline(load_chunks(args.chunks_dir), VLLMChatClient())
+        pipeline = build_pipeline(args.chunks_dir)
         if args.query:
             display_result(pipeline.ask(args.query, top_k=args.top_k), args.show_context)
             return 0

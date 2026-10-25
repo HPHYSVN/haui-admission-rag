@@ -7,7 +7,9 @@ experiments, never the production pipeline.
 
 These diagrams distinguish the human data-preparation/evaluation loop, the
 implemented CLI pipeline, and a possible later backend/frontend architecture.
-The third diagram is a target design, not functionality that exists today.
+The third diagram is still a target design for the ingestion/evaluation UI; the
+chat backend itself now exists (`app/` + `frontend/`) and shares this package
+through `rag/factory.py`. See `docs/architecture.md` for the implemented split.
 
 ### 1. Corpus preparation and evaluation feedback loop
 
@@ -131,7 +133,8 @@ flowchart LR
 
 This target adds a frontend, API/session boundaries, rewrite and multi-query,
 rank fusion, reranking, calibrated abstention, citation checks, streaming, and
-an evaluation/review dashboard. Each addition should be gated by measurable
+an evaluation/review dashboard. Streaming, year eligibility, and CLI ingestion
+are already implemented; remaining additions should be gated by measurable
 improvement on the curated test set, latency budgets, and answer-quality review.
 
 ## Setup
@@ -144,8 +147,10 @@ cp .env.example .env
 The first semantic query downloads the configured multilingual embedding model
 to the local Hugging Face cache. Model weights and generated vector indexes are
 not committed. Configure `RAG_EMBEDDING_MODEL` only with a model supported by
-FastEmbed. vLLM chat settings are `VLLM_BASE_URL`, `VLLM_MODEL`, and optionally
-`VLLM_API_KEY`. The prompt packer keeps retrieved context under a conservative
+FastEmbed. Generation settings are `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`,
+and optionally `LLM_API_KEY`; the older `VLLM_*` names still work as aliases, and
+any OpenAI-compatible endpoint (vLLM, Ollama, external API) uses the same adapter.
+See `docs/llm-providers.md`. The prompt packer keeps retrieved context under a conservative
 15,000-character budget and bounds recent history before sending the request.
 This leaves room for the configured 800-token output in the model's 8K window;
 long chunks are explicitly marked as truncated rather than silently exceeding
@@ -485,7 +490,8 @@ When the relevance filter rejects all candidates, generation is skipped and
 Add one JSON object per line to `evaluation/questions.jsonl`. A case can contain
 `question`, `expected_document_ids`, `expected_chunk_ids`, `expected_year`, and
 `notes`. `rag/test_questions.json` remains supported for the original basic
-evaluation.
+evaluation. The checked-in suite has 140 questions across all 14 corpus groups,
+with dataset integrity enforced by `tests/test_evaluation_dataset.py`.
 
 Useful checks:
 
@@ -495,9 +501,16 @@ uv run python -m rag.evaluate
 ```
 
 The sample cases in `evaluation/questions.jsonl` include year-specific
-cutoff-score questions, scholarship, tuition, admission methods, a no-match
-query, and a query without an explicit year. Add validated final chunks for a
-document before expecting it to appear in retrieval.
+cutoff-score questions, scholarship, tuition, admission methods, curriculum,
+enrolment procedures, dormitory, student life/support, training regulations,
+and institutional history. Add validated final chunks for a document before
+expecting it to appear in retrieval.
 
-No external vector database server, reranker, query rewriting, agentic
-retrieval, or FE rendering is part of the current baseline.
+Year-sensitive questions are scoped by `rag/eligibility.py`: explicit years win,
+otherwise they default to 2026, and missing current-year evidence produces an
+abstention. Evergreen topics (student life, support, dormitory context) stay
+available without being treated as current-cycle proof.
+
+No external vector database server, query rewriting, agentic retrieval, or FE
+rendering is part of `rag/`; the chat API and frontend live in `app/` and
+`frontend/`, and reuse this package through `rag/factory.py`.
